@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Doctor Dashboard | ClinicOS</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-logo">
+
+            <div class="logo-icon">
+                +
+            </div>
+
+            <div>
+                <h2>Clinic<span>OS</span></h2>
+                <p>Care. Simplified.</p>
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="#" class="nav-item active">
+                <span>⌂</span>
+                Dashboard
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>♙</span>
+                Patients
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>☷</span>
+                Queue
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>◷</span>
+                Appointments
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>▣</span>
+                Prescriptions
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>⌁</span>
+                Lab Reports
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>◈</span>
+                Analytics
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="doctor-mini">
+
+                <div class="doctor-mini-avatar">
+                    👨‍⚕️
+                </div>
+
+                <div>
+                    <strong id="sidebarDoctorName">
+                        Doctor
+                    </strong>
+
+                    <small>
+                        Medical Doctor
+                    </small>
+                </div>
+
+            </div>
+
+
+            <button class="logout-btn" id="logoutBtn">
+
+                <span>↪</span>
+                Logout
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="dashboard-main">
+
+
+        <!-- TOP BAR -->
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <p class="dashboard-label">
+                    DOCTOR WORKSPACE
+                </p>
+
+                <h1>
+                    Good morning,
+                    <span id="doctorName">
+                        Doctor
+                    </span> 👋
+                </h1>
+
+                <p class="dashboard-subtitle">
+                    Here's what's happening at your clinic today.
+                </p>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <button class="notification-btn">
+                    🔔
+                    <span></span>
+                </button>
+
+                <div class="header-avatar">
+                    👨‍⚕️
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- STATS -->
+
+        <section class="stats-grid">
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon green">
+                    ♙
+                </div>
+
+                <div>
+
+                    <p>Today's Patients</p>
+
+                    <h2>12</h2>
+
+                    <small>
+                        +3 from yesterday
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon orange">
+                    ◷
+                </div>
+
+                <div>
+
+                    <p>Waiting Queue</p>
+
+                    <h2>4</h2>
+
+                    <small>
+                        Patients waiting
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon blue">
+                    ✓
+                </div>
+
+                <div>
+
+                    <p>Consultations</p>
+
+                    <h2>8</h2>
+
+                    <small>
+                        Completed today
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon purple">
+                    ₹
+                </div>
+
+                <div>
+
+                    <p>Today's Revenue</p>
+
+                    <h2>₹18,400</h2>
+
+                    <small>
+                        From consultations
+                    </small>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- MAIN GRID -->
+
+        <section class="dashboard-grid">
+
+
+            <!-- QUEUE -->
+
+            <div class="dashboard-card queue-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Today's Queue</h2>
+
+                        <p>
+                            Patients waiting for consultation
+                        </p>
+
+                    </div>
+
+                    <button class="view-btn">
+                        View All →
+                    </button>
+
+                </div>
+
+
+                <div class="queue-list">
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            01
+                        </div>
+
+                        <div class="patient-avatar">
+                            RS
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Rahul Sharma
+                            </strong>
+
+                            <span>
+                                General Consultation • 10:00 AM
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            02
+                        </div>
+
+                        <div class="patient-avatar blue-avatar">
+                            PK
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Priya Kumar
+                            </strong>
+
+                            <span>
+                                Follow-up • 10:30 AM
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            03
+                        </div>
+
+                        <div class="patient-avatar purple-avatar">
+                            AS
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Amit Singh
+                            </strong>
+
+                            <span>
+                                General Consultation • 11:00 AM
+                            </span>
+
+                        </div>
+
+                        <span class="status current">
+                            Next
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            04
+                        </div>
+
+                        <div class="patient-avatar pink-avatar">
+                            NG
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Neha Gupta
+                            </strong>
+
+                            <span>
+                                Follow-up • 11:30 AM
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- APPOINTMENTS -->
+
+            <div class="dashboard-card appointments-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>Appointments</h2>
+
+                        <p>
+                            Scheduled for today
+                        </p>
+
+                    </div>
+
+                    <button class="add-btn">
+                        + Add
+                    </button>
+
+                </div>
+
+
+                <div class="appointment-list">
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>10:00</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Rahul Sharma
+                            </strong>
+
+                            <span>
+                                General Consultation
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>10:30</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Priya Kumar
+                            </strong>
+
+                            <span>
+                                Follow-up
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>11:00</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Amit Singh
+                            </strong>
+
+                            <span>
+                                General Consultation
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>11:30</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Neha Gupta
+                            </strong>
+
+                            <span>
+                                Follow-up
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- RECENT PATIENTS -->
+
+        <section class="dashboard-card recent-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h2>Recent Patients</h2>
+
+                    <p>
+                        Patients you've recently consulted
+                    </p>
+
+                </div>
+
+                <button class="view-btn">
+                    View All →
+                </button>
+
+            </div>
+
+
+            <div class="patient-table">
+
+
+                <div class="table-header">
+
+                    <span>Patient</span>
+                    <span>Age</span>
+                    <span>Last Visit</span>
+                    <span>Diagnosis</span>
+                    <span>Status</span>
+
+                </div>
+
+
+
+                <div class="table-row">
+
+                    <div class="table-patient">
+
+                        <div class="patient-avatar">
+                            RS
+                        </div>
+
+                        <strong>
+                            Rahul Sharma
+                        </strong>
+
+                    </div>
+
+                    <span>32</span>
+
+                    <span>
+                        Today, 10:00 AM
+                    </span>
+
+                    <span>
+                        Fever & Cold
+                    </span>
+
+                    <span class="table-status">
+                        Completed
+                    </span>
+
+                </div>
+
+
+
+                <div class="table-row">
+
+                    <div class="table-patient">
+
+                        <div class="patient-avatar blue-avatar">
+                            PK
+                        </div>
+
+                        <strong>
+                            Priya Kumar
+                        </strong>
+
+                    </div>
+
+                    <span>28</span>
+
+                    <span>
+                        Today, 10:30 AM
+                    </span>
+
+                    <span>
+                        Migraine
+                    </span>
+
+                    <span class="table-status">
+                        Completed
+                    </span>
+
+                </div>
+
+
+
+                <div class="table-row">
+
+                    <div class="table-patient">
+
+                        <div class="patient-avatar purple-avatar">
+                            AS
+                        </div>
+
+                        <strong>
+                            Amit Singh
+                        </strong>
+
+                    </div>
+
+                    <span>45</span>
+
+                    <span>
+                        Yesterday
+                    </span>
+
+                    <span>
+                        Hypertension
+                    </span>
+
+                    <span class="table-status">
+                        Follow-up
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- AI ASSIST -->
+
+        <section class="ai-dashboard-card">
+
+            <div class="ai-content">
+
+                <div class="ai-icon">
+                    ✦
+                </div>
+
+                <div>
+
+                    <p class="ai-label">
+                        DOCASSIST AI
+                    </p>
+
+                    <h2>
+                        Your AI-assisted clinical workspace
+                    </h2>
+
+                    <p>
+                        Summarize patient history, create structured
+                        prescriptions with Voice-2-Rx and get
+                        patient-contextual insights.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <button class="ai-btn">
+                Open DocAssist →
+            </button>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="dashboard.js"></script>
+
+</body>
+
+</html>
