@@ -1141,18 +1141,15 @@ footer p {
 /* ================= DOCTOR LOGIN ================= */
 
 .login-page {
-
-    min-height: calc(100vh - 85px);
-
-    padding: 70px 10%;
+    min-height: calc(100vh - 90px);
+    width: 100%;
 
     display: flex;
-
+    justify-content: center;
     align-items: center;
 
-    justify-content: center;
-
-    gap: 100px;
+    padding: 40px 20px;
+    box-sizing: border-box;
 }
 
 
