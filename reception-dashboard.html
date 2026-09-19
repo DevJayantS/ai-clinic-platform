@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Reception Dashboard | ClinicOS</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
+</head>
+
+
+<body class="dashboard-body">
+
+
+<div class="dashboard-layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar reception-sidebar">
+
+        <div class="sidebar-logo">
+
+            <div class="logo-icon reception-logo">
+                +
+            </div>
+
+            <div>
+
+                <h2>
+                    Clinic<span>OS</span>
+                </h2>
+
+                <p>
+                    Care. Simplified.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="#" class="nav-item active reception-active">
+                <span>⌂</span>
+                Dashboard
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>◷</span>
+                Appointments
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>♙</span>
+                Patients
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>☷</span>
+                Queue
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>₹</span>
+                Billing
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>▣</span>
+                Payments
+            </a>
+
+            <a href="#" class="nav-item">
+                <span>◈</span>
+                Activity
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="doctor-mini">
+
+                <div class="doctor-mini-avatar reception-avatar">
+                    🧑‍💼
+                </div>
+
+                <div>
+
+                    <strong id="receptionistName">
+                        Yash
+                    </strong>
+
+                    <small>
+                        Receptionist
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <button class="logout-btn" id="receptionLogout">
+
+                <span>↪</span>
+
+                Logout
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- MAIN -->
+
+    <main class="dashboard-main">
+
+
+        <!-- HEADER -->
+
+        <header class="dashboard-header">
+
+            <div>
+
+                <p class="dashboard-label reception-label">
+                    CLINIC OPERATIONS
+                </p>
+
+                <h1>
+
+                    Good morning,
+                    <span id="receptionHeaderName">
+                        Yash
+                    </span> 👋
+
+                </h1>
+
+                <p class="dashboard-subtitle">
+
+                    Manage today's appointments,
+                    patients and clinic operations.
+
+                </p>
+
+            </div>
+
+
+            <div class="header-actions">
+
+                <button class="notification-btn">
+                    🔔
+                    <span></span>
+                </button>
+
+                <div class="header-avatar reception-header-avatar">
+                    🧑‍💼
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- STATS -->
+
+        <section class="stats-grid">
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon blue">
+                    ◷
+                </div>
+
+                <div>
+
+                    <p>
+                        Today's Appointments
+                    </p>
+
+                    <h2>
+                        18
+                    </h2>
+
+                    <small>
+                        14 confirmed
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon green">
+                    ♙
+                </div>
+
+                <div>
+
+                    <p>
+                        Registered Patients
+                    </p>
+
+                    <h2>
+                        126
+                    </h2>
+
+                    <small>
+                        +8 this week
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon orange">
+                    ☷
+                </div>
+
+                <div>
+
+                    <p>
+                        Waiting Queue
+                    </p>
+
+                    <h2>
+                        7
+                    </h2>
+
+                    <small>
+                        Across all doctors
+                    </small>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon purple">
+                    ₹
+                </div>
+
+                <div>
+
+                    <p>
+                        Today's Collection
+                    </p>
+
+                    <h2>
+                        ₹32,800
+                    </h2>
+
+                    <small>
+                        15 payments
+                    </small>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- MAIN GRID -->
+
+        <section class="dashboard-grid">
+
+
+            <!-- APPOINTMENTS -->
+
+            <div class="dashboard-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+                            Today's Appointments
+                        </h2>
+
+                        <p>
+                            All doctors
+                        </p>
+
+                    </div>
+
+                    <button class="add-btn reception-add">
+                        + Add
+                    </button>
+
+                </div>
+
+
+                <div class="appointment-list">
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>10:00</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line blue-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Rahul Sharma
+                            </strong>
+
+                            <span>
+                                Dr. Aditi Soni • Consultation
+                            </span>
+
+                        </div>
+
+                        <span class="status current">
+                            Confirmed
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>10:30</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line blue-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Priya Kumar
+                            </strong>
+
+                            <span>
+                                Dr. Adarsh Soni • Follow-up
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>11:00</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line blue-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Amit Singh
+                            </strong>
+
+                            <span>
+                                Dr. Aditi Soni • Consultation
+                            </span>
+
+                        </div>
+
+                        <span class="status current">
+                            Confirmed
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="appointment">
+
+                        <div class="appointment-time">
+                            <strong>11:30</strong>
+                            <span>AM</span>
+                        </div>
+
+                        <div class="appointment-line blue-line"></div>
+
+                        <div class="appointment-details">
+
+                            <strong>
+                                Neha Gupta
+                            </strong>
+
+                            <span>
+                                Dr. Adarsh Soni • Follow-up
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- QUEUE -->
+
+            <div class="dashboard-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+                            Live Queue
+                        </h2>
+
+                        <p>
+                            Current clinic waiting list
+                        </p>
+
+                    </div>
+
+                    <button class="view-btn reception-view">
+                        View All →
+                    </button>
+
+                </div>
+
+
+                <div class="queue-list">
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            01
+                        </div>
+
+                        <div class="patient-avatar blue-avatar">
+                            RS
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Rahul Sharma
+                            </strong>
+
+                            <span>
+                                Dr. Aditi Soni
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            02
+                        </div>
+
+                        <div class="patient-avatar">
+                            PK
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Priya Kumar
+                            </strong>
+
+                            <span>
+                                Dr. Adarsh Soni
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            03
+                        </div>
+
+                        <div class="patient-avatar purple-avatar">
+                            AS
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Amit Singh
+                            </strong>
+
+                            <span>
+                                Dr. Aditi Soni
+                            </span>
+
+                        </div>
+
+                        <span class="status current">
+                            Next
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="queue-patient">
+
+                        <div class="patient-number">
+                            04
+                        </div>
+
+                        <div class="patient-avatar pink-avatar">
+                            NG
+                        </div>
+
+                        <div class="patient-info">
+
+                            <strong>
+                                Neha Gupta
+                            </strong>
+
+                            <span>
+                                Dr. Adarsh Soni
+                            </span>
+
+                        </div>
+
+                        <span class="status waiting">
+                            Waiting
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- PATIENT REGISTRATION + BILLING -->
+
+        <section class="dashboard-grid">
+
+
+            <!-- QUICK REGISTRATION -->
+
+            <div class="dashboard-card quick-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+                            Patient Registration
+                        </h2>
+
+                        <p>
+                            Quickly register a new patient
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="registration-box">
+
+                    <div class="registration-icon">
+                        ♙
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            New Patient?
+                        </strong>
+
+                        <p>
+                            Create a patient profile and
+                            add them to today's queue.
+                        </p>
+
+                    </div>
+
+                    <button class="register-btn">
+                        Register Patient →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- BILLING -->
+
+            <div class="dashboard-card quick-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h2>
+                            Billing Overview
+                        </h2>
+
+                        <p>
+                            Today's payment activity
+                        </p>
+
+                    </div>
+
+                    <button class="view-btn reception-view">
+                        View Billing →
+                    </button>
+
+                </div>
+
+
+                <div class="billing-stats">
+
+                    <div>
+
+                        <span>
+                            Collected
+                        </span>
+
+                        <strong>
+                            ₹32,800
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Pending
+                        </span>
+
+                        <strong>
+                            ₹4,200
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Transactions
+                        </span>
+
+                        <strong>
+                            15
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="payment-bar">
+
+                    <div></div>
+
+                </div>
+
+                <small class="payment-note">
+                    89% of today's expected collection received
+                </small>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- RECENT ACTIVITY -->
+
+        <section class="dashboard-card recent-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h2>
+                        Recent Activity
+                    </h2>
+
+                    <p>
+                        Latest clinic updates
+                    </p>
+
+                </div>
+
+                <button class="view-btn reception-view">
+                    View All →
+                </button>
+
+            </div>
+
+
+            <div class="activity-list">
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon green-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Payment received
+                        </strong>
+
+                        <p>
+                            Rahul Sharma paid ₹800
+                        </p>
+
+                    </div>
+
+                    <span>
+                        5 min ago
+                    </span>
+
+                </div>
+
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon blue-icon">
+                        +
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            New patient registered
+                        </strong>
+
+                        <p>
+                            Neha Gupta was added to the clinic
+                        </p>
+
+                    </div>
+
+                    <span>
+                        18 min ago
+                    </span>
+
+                </div>
+
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon purple-icon">
+                        ◷
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Appointment booked
+                        </strong>
+
+                        <p>
+                            Amit Singh booked with Dr. Aditi Soni
+                        </p>
+
+                    </div>
+
+                    <span>
+                        32 min ago
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="reception-dashboard.js"></script>
+
+</body>
+
+</html>

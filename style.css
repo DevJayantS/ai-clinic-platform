@@ -1560,11 +1560,21 @@ footer p {
 /* =================================
    DOCTOR DASHBOARD
 ================================= */
-
 .dashboard-body {
     margin: 0;
     font-family: "DM Sans", sans-serif;
-    background: #f4fbf9;
+
+    background:
+        linear-gradient(
+            rgba(240, 253, 249, 0.72),
+            rgba(240, 253, 249, 0.72)
+        ),
+        url("assets/bg.png");
+
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+
     color: #102b3f;
 }
 
@@ -2413,194 +2423,237 @@ footer p {
 
 
 /* =================================
-   AI CARD
+   RECEPTION DASHBOARD
 ================================= */
 
-.ai-dashboard-card {
-    background: linear-gradient(
-        120deg,
-        #e2f8f3,
-        #f4fffd
-    );
-
-    border: 1px solid #cceee7;
-
-    border-radius: 20px;
-
-    padding: 25px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 25px;
+.reception-logo {
+    background: #3488e8;
 }
 
-
-.ai-content {
-    display: flex;
-
-    align-items: center;
-
-    gap: 17px;
+.reception-active {
+    background: #e8f1ff !important;
+    color: #3488e8 !important;
 }
 
+.reception-label {
+    color: #3488e8;
+}
 
-.ai-icon {
-    width: 50px;
-    height: 50px;
+.reception-avatar {
+    background: #e8f1ff;
+    color: #3488e8;
+}
+
+.reception-header-avatar {
+    background: #e8f1ff;
+}
+
+.reception-add {
+    background: #e8f1ff;
+    color: #3488e8;
+}
+
+.reception-view {
+    color: #3488e8;
+}
+
+.blue-line {
+    background: #c7dcfa;
+}
+
+.register-btn {
+    border: none;
+    background: #3488e8;
+    color: white;
+
+    padding: 11px 16px;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.registration-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 18px;
+
+    background: #f7fbff;
+
+    border: 1px solid #e4eefb;
 
     border-radius: 15px;
+}
 
-    background: #17ad94;
+.registration-icon {
+    width: 45px;
+    height: 45px;
 
-    color: white;
+    border-radius: 13px;
+
+    background: #e8f1ff;
+    color: #3488e8;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+}
+
+.registration-box strong {
+    font-size: 12px;
+}
+
+.registration-box p {
+    margin: 4px 0 0;
+
+    color: #8998a2;
+
+    font-size: 10px;
+}
+
+.billing-stats {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.billing-stats div {
+    padding: 13px;
+
+    background: #f8fafc;
+
+    border-radius: 12px;
+}
+
+.billing-stats span {
+    display: block;
+
+    color: #8998a2;
+
+    font-size: 10px;
+}
+
+.billing-stats strong {
+    display: block;
+
+    margin-top: 5px;
+
+    font-size: 16px;
+
+    color: #243d4d;
+}
+
+.payment-bar {
+    width: 100%;
+    height: 7px;
+
+    background: #edf1f4;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.payment-bar div {
+    width: 89%;
+    height: 100%;
+
+    background: #3488e8;
+
+    border-radius: 10px;
+}
+
+.payment-note {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #8998a2;
+
+    font-size: 9px;
+}
+
+.activity-list {
+    display: flex;
+
+    flex-direction: column;
+}
+
+.activity-item {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #edf2f1;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 37px;
+    height: 37px;
+
+    border-radius: 11px;
 
     display: flex;
 
     align-items: center;
     justify-content: center;
 
-    font-size: 23px;
+    font-weight: 700;
 }
 
+.green-icon {
+    background: #e3f7f2;
+    color: #17a88e;
+}
 
-.ai-label {
-    margin: 0 0 5px;
+.blue-icon {
+    background: #e8f1ff;
+    color: #3488e8;
+}
+
+.purple-icon {
+    background: #f1eaff;
+    color: #8060c5;
+}
+
+.activity-item div:nth-child(2) {
+    flex: 1;
+}
+
+.activity-item strong {
+    font-size: 12px;
+}
+
+.activity-item p {
+    margin: 3px 0 0;
+
+    font-size: 10px;
+
+    color: #8998a2;
+}
+
+.activity-item > span {
+    color: #9aa6ad;
 
     font-size: 9px;
-
-    font-weight: 700;
-
-    color: #159c84;
-
-    letter-spacing: 1.3px;
-}
-
-
-.ai-dashboard-card h2 {
-    margin: 0;
-
-    font-size: 16px;
-}
-
-
-.ai-dashboard-card p {
-    margin: 5px 0 0;
-
-    font-size: 11px;
-
-    color: #71868a;
-
-    max-width: 650px;
-}
-
-
-.ai-btn {
-    border: none;
-
-    background: #17ad94;
-
-    color: white;
-
-    padding: 12px 17px;
-
-    border-radius: 11px;
-
-    font-family: inherit;
-
-    font-size: 11px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    white-space: nowrap;
-}
-
-
-/* =================================
-   RESPONSIVE
-================================= */
-
-@media (max-width: 1100px) {
-
-    .stats-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
-}
-
-
-@media (max-width: 800px) {
-
-    .sidebar {
-        width: 75px;
-
-        padding: 20px 10px;
-    }
-
-    .sidebar-logo > div:last-child,
-    .nav-item:not(.active)::after,
-    .nav-item {
-        font-size: 0;
-    }
-
-    .nav-item span {
-        font-size: 19px;
-    }
-
-    .doctor-mini > div:last-child,
-    .logout-btn {
-        display: none;
-    }
-
-    .dashboard-main {
-        margin-left: 75px;
-
-        width: calc(100% - 75px);
-
-        padding: 25px 18px;
-    }
-
-}
-
-
-@media (max-width: 600px) {
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-header h1 {
-        font-size: 22px;
-    }
-
-    .header-actions {
-        display: none;
-    }
-
-    .table-header {
-        display: none;
-    }
-
-    .table-row {
-        grid-template-columns: 1fr;
-
-        gap: 7px;
-    }
-
-    .ai-dashboard-card {
-        flex-direction: column;
-
-        align-items: flex-start;
-    }
-
 }
