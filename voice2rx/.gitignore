@@ -1,0 +1,4 @@
+.env
+server/data/
+__pycache__/
+tests/*.png

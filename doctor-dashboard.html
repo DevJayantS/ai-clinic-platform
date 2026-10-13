@@ -11,6 +11,7 @@
     <title>Doctor Dashboard | ClinicOS</title>
 
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="voice2rx/web/voice2rx.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
 
@@ -50,12 +51,12 @@
 
         <nav class="sidebar-nav">
 
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item active" data-view="dashboard">
                 <span>⌂</span>
                 Dashboard
             </a>
 
-            <a href="#" class="nav-item">
+            <a href="#patients" class="nav-item" data-view="patients">
                 <span>♙</span>
                 Patients
             </a>
@@ -125,6 +126,8 @@
     <!-- MAIN CONTENT -->
 
     <main class="dashboard-main">
+
+        <div id="viewDashboard" class="dash-view">
 
 
         <!-- TOP BAR -->
@@ -690,12 +693,25 @@
             </div>
 
         </section>
+        </div><!-- /viewDashboard -->
+
+        <!-- PATIENTS: Voice2Rx workspace -->
+        <div id="viewPatients" class="dash-view" hidden>
+            <p class="dashboard-label">DOCTOR WORKSPACE &middot; PATIENTS</p>
+            <div id="v2rRoot"></div>
+        </div>
     </main>
 
 </div>
 
 
 <script src="dashboard.js"></script>
+<script src="voice2rx/shared/clinical.js"></script>
+<script src="voice2rx/web/icons.js"></script>
+<script src="voice2rx/web/sample.js"></script>
+<script src="voice2rx/web/recorder.js"></script>
+<script src="voice2rx/web/api.js"></script>
+<script src="voice2rx/web/app.js"></script>
 
 </body>
 
