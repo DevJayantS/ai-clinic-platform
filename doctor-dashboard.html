@@ -22,6 +22,36 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet">
 
+
+<style>
+.unused-modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(12,35,51,.42);padding:24px;align-items:center;justify-content:center;overflow-y:auto}
+.unused-modal-overlay.open{display:flex}
+.patient-modal{width:min(680px,100%);max-height:92vh;overflow-y:auto;background:#fff;border:1px solid #dcefe9;border-radius:24px;padding:28px;box-shadow:0 24px 80px rgba(15,55,60,.22)}
+.patient-modal .card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+.patient-modal h2{margin:0 0 6px;font-size:22px;color:#12344a}
+.patient-modal p{margin:0;color:#71869a}
+.modal-close{border:0;background:#eef8f5;border-radius:10px;width:38px;height:38px;font-size:25px;color:#138d7c;cursor:pointer}
+.patient-form{display:grid;gap:16px}
+.patient-form label{display:grid;gap:7px;font-size:14px;font-weight:600;color:#23465a}
+.patient-form input,.patient-form select,.patient-form textarea{width:100%;box-sizing:border-box;border:1px solid #d8e8e4;border-radius:12px;padding:12px 13px;background:#fbfefd;color:#16394b;font:inherit;outline:none}
+.patient-form input:focus,.patient-form select:focus,.patient-form textarea:focus{border-color:#18ad95;box-shadow:0 0 0 3px rgba(24,173,149,.12)}
+.form-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+.modal-cancel{border:1px solid #d8e8e4;background:white;color:#486577;padding:12px 18px;border-radius:12px;cursor:pointer;font-weight:600}
+.patient-form .register-btn{border:0;cursor:pointer}
+.form-error{color:#c43f4b!important;font-size:13px;min-height:0}
+.empty-state{padding:20px;color:#78909c;font-size:14px;text-align:center}
+@media(max-width:600px){.unused-modal-overlay{padding:10px}.patient-modal{padding:18px;border-radius:18px}.form-two-col{grid-template-columns:1fr}}
+</style>
+
+<style>
+/* Dynamic appointment rows */
+.patient-clickable{cursor:pointer}
+.patient-clickable:hover{background:rgba(28,177,151,.055)}
+.patient-clickable:focus{outline:2px solid #18ad95;outline-offset:2px}
+.status.cancelled{background:#fde8e8;color:#c43f4b}
+.table-row{cursor:pointer}
+</style>
 </head>
 
 
@@ -186,11 +216,9 @@
 
                     <p>Today's Patients</p>
 
-                    <h2>12</h2>
+                    <h2 id="doctorTodayCount">0</h2>
 
-                    <small>
-                        +3 from yesterday
-                    </small>
+                    <small>Appointments scheduled today</small>
 
                 </div>
 
@@ -208,7 +236,7 @@
 
                     <p>Waiting Queue</p>
 
-                    <h2>4</h2>
+                    <h2 id="doctorWaitingCount">0</h2>
 
                     <small>
                         Patients waiting
@@ -230,11 +258,9 @@
 
                     <p>Consultations</p>
 
-                    <h2>8</h2>
+                    <h2 id="doctorConsultationCount">0</h2>
 
-                    <small>
-                        Completed today
-                    </small>
+                    <small>Completed consultations</small>
 
                 </div>
 
@@ -252,11 +278,9 @@
 
                     <p>Today's Revenue</p>
 
-                    <h2>₹18,400</h2>
+                    <h2 id="doctorRevenue">₹0</h2>
 
-                    <small>
-                        From consultations
-                    </small>
+                    <small>Recorded revenue</small>
 
                 </div>
 
@@ -295,129 +319,7 @@
                 </div>
 
 
-                <div class="queue-list">
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            01
-                        </div>
-
-                        <div class="patient-avatar">
-                            RS
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Rahul Sharma
-                            </strong>
-
-                            <span>
-                                General Consultation • 10:00 AM
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            02
-                        </div>
-
-                        <div class="patient-avatar blue-avatar">
-                            PK
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Priya Kumar
-                            </strong>
-
-                            <span>
-                                Follow-up • 10:30 AM
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            03
-                        </div>
-
-                        <div class="patient-avatar purple-avatar">
-                            AS
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Amit Singh
-                            </strong>
-
-                            <span>
-                                General Consultation • 11:00 AM
-                            </span>
-
-                        </div>
-
-                        <span class="status current">
-                            Next
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            04
-                        </div>
-
-                        <div class="patient-avatar pink-avatar">
-                            NG
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Neha Gupta
-                            </strong>
-
-                            <span>
-                                Follow-up • 11:30 AM
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-                </div>
+                <div class="queue-list" id="doctorQueue"><p class="empty-state">No patients are in your queue.</p></div>
 
             </div>
 
@@ -446,109 +348,7 @@
                 </div>
 
 
-                <div class="appointment-list">
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>10:00</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Rahul Sharma
-                            </strong>
-
-                            <span>
-                                General Consultation
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>10:30</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Priya Kumar
-                            </strong>
-
-                            <span>
-                                Follow-up
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>11:00</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Amit Singh
-                            </strong>
-
-                            <span>
-                                General Consultation
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>11:30</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Neha Gupta
-                            </strong>
-
-                            <span>
-                                Follow-up
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                </div>
+                <div class="appointment-list" id="doctorAppointments"><p class="empty-state">No appointments scheduled.</p></div>
 
             </div>
 
@@ -581,115 +381,10 @@
 
 
             <div class="patient-table">
-
-
                 <div class="table-header">
-
-                    <span>Patient</span>
-                    <span>Age</span>
-                    <span>Last Visit</span>
-                    <span>Diagnosis</span>
-                    <span>Status</span>
-
+                    <span>Patient</span><span>Age</span><span>Appointment</span><span>Reason</span><span>Status</span>
                 </div>
-
-
-
-                <div class="table-row">
-
-                    <div class="table-patient">
-
-                        <div class="patient-avatar">
-                            RS
-                        </div>
-
-                        <strong>
-                            Rahul Sharma
-                        </strong>
-
-                    </div>
-
-                    <span>32</span>
-
-                    <span>
-                        Today, 10:00 AM
-                    </span>
-
-                    <span>
-                        Fever & Cold
-                    </span>
-
-                    <span class="table-status">
-                        Completed
-                    </span>
-
-                </div>
-
-
-
-                <div class="table-row">
-
-                    <div class="table-patient">
-
-                        <div class="patient-avatar blue-avatar">
-                            PK
-                        </div>
-
-                        <strong>
-                            Priya Kumar
-                        </strong>
-
-                    </div>
-
-                    <span>28</span>
-
-                    <span>
-                        Today, 10:30 AM
-                    </span>
-
-                    <span>
-                        Migraine
-                    </span>
-
-                    <span class="table-status">
-                        Completed
-                    </span>
-
-                </div>
-
-
-
-                <div class="table-row">
-
-                    <div class="table-patient">
-
-                        <div class="patient-avatar purple-avatar">
-                            AS
-                        </div>
-
-                        <strong>
-                            Amit Singh
-                        </strong>
-
-                    </div>
-
-                    <span>45</span>
-
-                    <span>
-                        Yesterday
-                    </span>
-
-                    <span>
-                        Hypertension
-                    </span>
-
-                    <span class="table-status">
-                        Follow-up
-                    </span>
-
-                </div>
-
-
+                <div id="doctorRecentPatients"><p class="empty-state">No patients registered yet.</p></div>
             </div>
 
         </section>

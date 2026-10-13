@@ -21,6 +21,36 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet">
 
+
+<style>
+.patient-modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(12,35,51,.42);padding:24px;align-items:center;justify-content:center;overflow-y:auto}
+.patient-modal-overlay.open{display:flex}
+.patient-modal{width:min(680px,100%);max-height:92vh;overflow-y:auto;background:#fff;border:1px solid #dcefe9;border-radius:24px;padding:28px;box-shadow:0 24px 80px rgba(15,55,60,.22)}
+.patient-modal .card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+.patient-modal h2{margin:0 0 6px;font-size:22px;color:#12344a}
+.patient-modal p{margin:0;color:#71869a}
+.modal-close{border:0;background:#eef8f5;border-radius:10px;width:38px;height:38px;font-size:25px;color:#138d7c;cursor:pointer}
+.patient-form{display:grid;gap:16px}
+.patient-form label{display:grid;gap:7px;font-size:14px;font-weight:600;color:#23465a}
+.patient-form input,.patient-form select,.patient-form textarea{width:100%;box-sizing:border-box;border:1px solid #d8e8e4;border-radius:12px;padding:12px 13px;background:#fbfefd;color:#16394b;font:inherit;outline:none}
+.patient-form input:focus,.patient-form select:focus,.patient-form textarea:focus{border-color:#18ad95;box-shadow:0 0 0 3px rgba(24,173,149,.12)}
+.form-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+.modal-cancel{border:1px solid #d8e8e4;background:white;color:#486577;padding:12px 18px;border-radius:12px;cursor:pointer;font-weight:600}
+.patient-form .register-btn{border:0;cursor:pointer}
+.form-error{color:#c43f4b!important;font-size:13px;min-height:0}
+.empty-state{padding:20px;color:#78909c;font-size:14px;text-align:center}
+@media(max-width:600px){.patient-modal-overlay{padding:10px}.patient-modal{padding:18px;border-radius:18px}.form-two-col{grid-template-columns:1fr}}
+</style>
+
+<style>
+/* Dynamic appointment rows */
+.patient-clickable{cursor:pointer}
+.patient-clickable:hover{background:rgba(28,177,151,.055)}
+.patient-clickable:focus{outline:2px solid #18ad95;outline-offset:2px}
+.status.cancelled{background:#fde8e8;color:#c43f4b}
+.table-row{cursor:pointer}
+</style>
 </head>
 
 
@@ -200,13 +230,9 @@
                         Today's Appointments
                     </p>
 
-                    <h2>
-                        18
-                    </h2>
+                    <h2 id="receptionTodayAppointments">0</h2>
 
-                    <small>
-                        14 confirmed
-                    </small>
+                    <small>Appointments scheduled for today</small>
 
                 </div>
 
@@ -226,13 +252,9 @@
                         Registered Patients
                     </p>
 
-                    <h2>
-                        126
-                    </h2>
+                    <h2 id="receptionTotalPatients">0</h2>
 
-                    <small>
-                        +8 this week
-                    </small>
+                    <small>Patients registered</small>
 
                 </div>
 
@@ -252,13 +274,9 @@
                         Waiting Queue
                     </p>
 
-                    <h2>
-                        7
-                    </h2>
+                    <h2 id="receptionWaitingCount">0</h2>
 
-                    <small>
-                        Across all doctors
-                    </small>
+                    <small>Across all doctors</small>
 
                 </div>
 
@@ -278,13 +296,9 @@
                         Today's Collection
                     </p>
 
-                    <h2>
-                        ₹32,800
-                    </h2>
+                    <h2 id="receptionCollection">₹0</h2>
 
-                    <small>
-                        15 payments
-                    </small>
+                    <small>Recorded in this demo</small>
 
                 </div>
 
@@ -325,125 +339,7 @@
                 </div>
 
 
-                <div class="appointment-list">
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>10:00</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line blue-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Rahul Sharma
-                            </strong>
-
-                            <span>
-                                Dr. Aditi Soni • Consultation
-                            </span>
-
-                        </div>
-
-                        <span class="status current">
-                            Confirmed
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>10:30</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line blue-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Priya Kumar
-                            </strong>
-
-                            <span>
-                                Dr. Adarsh Soni • Follow-up
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>11:00</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line blue-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Amit Singh
-                            </strong>
-
-                            <span>
-                                Dr. Aditi Soni • Consultation
-                            </span>
-
-                        </div>
-
-                        <span class="status current">
-                            Confirmed
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="appointment">
-
-                        <div class="appointment-time">
-                            <strong>11:30</strong>
-                            <span>AM</span>
-                        </div>
-
-                        <div class="appointment-line blue-line"></div>
-
-                        <div class="appointment-details">
-
-                            <strong>
-                                Neha Gupta
-                            </strong>
-
-                            <span>
-                                Dr. Adarsh Soni • Follow-up
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-                </div>
+                <div class="appointment-list" id="receptionAppointments"><p class="empty-state">No appointments booked yet.</p></div>
 
             </div>
 
@@ -474,129 +370,7 @@
                 </div>
 
 
-                <div class="queue-list">
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            01
-                        </div>
-
-                        <div class="patient-avatar blue-avatar">
-                            RS
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Rahul Sharma
-                            </strong>
-
-                            <span>
-                                Dr. Aditi Soni
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            02
-                        </div>
-
-                        <div class="patient-avatar">
-                            PK
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Priya Kumar
-                            </strong>
-
-                            <span>
-                                Dr. Adarsh Soni
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            03
-                        </div>
-
-                        <div class="patient-avatar purple-avatar">
-                            AS
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Amit Singh
-                            </strong>
-
-                            <span>
-                                Dr. Aditi Soni
-                            </span>
-
-                        </div>
-
-                        <span class="status current">
-                            Next
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="queue-patient">
-
-                        <div class="patient-number">
-                            04
-                        </div>
-
-                        <div class="patient-avatar pink-avatar">
-                            NG
-                        </div>
-
-                        <div class="patient-info">
-
-                            <strong>
-                                Neha Gupta
-                            </strong>
-
-                            <span>
-                                Dr. Adarsh Soni
-                            </span>
-
-                        </div>
-
-                        <span class="status waiting">
-                            Waiting
-                        </span>
-
-                    </div>
-
-
-                </div>
+                <div class="queue-list" id="receptionQueue"><p class="empty-state">No patients in the queue yet.</p></div>
 
             </div>
 
@@ -650,9 +424,7 @@
 
                     </div>
 
-                    <button class="register-btn">
-                        Register Patient →
-                    </button>
+                    <button class="register-btn" id="openPatientModal" type="button">Register Patient →</button>
 
                 </div>
 
@@ -693,9 +465,7 @@
                             Collected
                         </span>
 
-                        <strong>
-                            ₹32,800
-                        </strong>
+                        <strong id="billingCollected">₹0</strong>
 
                     </div>
 
@@ -706,9 +476,7 @@
                             Pending
                         </span>
 
-                        <strong>
-                            ₹4,200
-                        </strong>
+                        <strong id="billingPending">₹0</strong>
 
                     </div>
 
@@ -719,9 +487,7 @@
                             Transactions
                         </span>
 
-                        <strong>
-                            15
-                        </strong>
+                        <strong id="billingTransactions">0</strong>
 
                     </div>
 
@@ -735,7 +501,7 @@
                 </div>
 
                 <small class="payment-note">
-                    89% of today's expected collection received
+                    Payment summary updates when billing is connected.
                 </small>
 
             </div>
@@ -770,90 +536,67 @@
             </div>
 
 
-            <div class="activity-list">
-
-
-                <div class="activity-item">
-
-                    <div class="activity-icon green-icon">
-                        ✓
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Payment received
-                        </strong>
-
-                        <p>
-                            Rahul Sharma paid ₹800
-                        </p>
-
-                    </div>
-
-                    <span>
-                        5 min ago
-                    </span>
-
-                </div>
-
-
-
-                <div class="activity-item">
-
-                    <div class="activity-icon blue-icon">
-                        +
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            New patient registered
-                        </strong>
-
-                        <p>
-                            Neha Gupta was added to the clinic
-                        </p>
-
-                    </div>
-
-                    <span>
-                        18 min ago
-                    </span>
-
-                </div>
-
-
-
-                <div class="activity-item">
-
-                    <div class="activity-icon purple-icon">
-                        ◷
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            Appointment booked
-                        </strong>
-
-                        <p>
-                            Amit Singh booked with Dr. Aditi Soni
-                        </p>
-
-                    </div>
-
-                    <span>
-                        32 min ago
-                    </span>
-
-                </div>
-
-
-            </div>
+            <div class="activity-list" id="receptionActivity"><p class="empty-state">No activity recorded yet.</p></div>
 
         </section>
 
+
+
+        <!-- ADD PATIENT / APPOINTMENT MODAL -->
+        <div class="patient-modal-overlay" id="patientModal" aria-hidden="true">
+            <section class="patient-modal" role="dialog" aria-modal="true" aria-labelledby="patientModalTitle">
+                <div class="card-heading">
+                    <div>
+                        <h2 id="patientModalTitle">Register Patient & Book Appointment</h2>
+                        <p>Patient will appear on the selected doctor's dashboard.</p>
+                    </div>
+                    <button type="button" class="modal-close" id="closePatientModal" aria-label="Close">×</button>
+                </div>
+                <form id="patientAppointmentForm" class="patient-form">
+                    <label>Patient full name
+                        <input id="patientName" name="patientName" type="text" placeholder="Enter patient name" required>
+                    </label>
+                    <label>Phone number
+                        <input id="patientPhone" name="patientPhone" type="tel" placeholder="10-digit phone number" pattern="[0-9+() -]{8,16}" required>
+                    </label>
+                    <div class="form-two-col">
+                        <label>Age
+                            <input id="patientAge" name="patientAge" type="number" min="0" max="120" placeholder="Age">
+                        </label>
+                        <label>Visit type
+                            <select id="visitType" name="visitType" required>
+                                <option value="General Consultation">General Consultation</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="New Consultation">New Consultation</option>
+                                <option value="Urgent Consultation">Urgent Consultation</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label>Select doctor
+                        <select id="appointmentDoctor" name="doctor" required>
+                            <option value="Dr. Aditi Soni">Dr. Aditi Soni</option>
+                            <option value="Dr. Adarsh Soni">Dr. Adarsh Soni</option>
+                        </select>
+                    </label>
+                    <div class="form-two-col">
+                        <label>Appointment date
+                            <input id="appointmentDate" name="date" type="date" required>
+                        </label>
+                        <label>Appointment time
+                            <input id="appointmentTime" name="time" type="time" required>
+                        </label>
+                    </div>
+                    <label>Reason / notes (optional)
+                        <textarea id="patientReason" name="reason" rows="2" placeholder="Symptoms or reason for visit"></textarea>
+                    </label>
+                    <p class="form-error" id="patientFormError" role="alert"></p>
+                    <div class="modal-actions">
+                        <button type="button" class="modal-cancel" id="cancelPatientModal">Cancel</button>
+                        <button type="submit" class="register-btn">Save Appointment →</button>
+                    </div>
+                </form>
+            </section>
+        </div>
 
     </main>
 
