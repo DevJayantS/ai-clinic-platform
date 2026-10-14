@@ -8,7 +8,7 @@ const { execFile } = require("child_process");
 const config = require("../config");
 
 const SCRIPT = path.resolve(config.ROOT, "whisper_service", "transcribe.py");
-const ALLOWED_EXT = [".webm", ".ogg", ".mp3", ".wav", ".m4a", ".mp4", ".flac", ".aac", ".opus"];
+const ALLOWED_EXT = [".webm", ".ogg", ".mp3", ".wav", ".m4a", ".mp4", ".flac", ".aac", ".opus", ".aiff", ".aif"];
 
 let cache = { at: 0, value: null };
 
@@ -16,7 +16,7 @@ function status() {
     const now = Date.now();
     if (cache.value && now - cache.at < 30000) return Promise.resolve(cache.value);
     return new Promise((resolve) => {
-        execFile(config.whisper.python, ["-c", "import faster_whisper"], { timeout: 15000 }, (err) => {
+        execFile(config.whisper.python, [SCRIPT, "--check"], { timeout: 30000 }, (err) => {
             cache = {
                 at: Date.now(),
                 value: err

@@ -112,14 +112,27 @@ async function shot(name) { const r = await send("Page.captureScreenshot", { for
     await ev(`document.querySelector('#v2rNav-workspace').click()`);
     await ev(`(()=>{const dt=new DataTransfer();dt.items.add(new File(['hello'],'notes.pdf',{type:'application/pdf'}));const i=document.querySelector('#v2rFile');i.files=dt.files;i.dispatchEvent(new Event('change'))})()`);
     check("unsupported upload rejected", await ev(`document.querySelector('#v2rRecError').textContent.includes('Unsupported')`));
-    // valid upload + no whisper => clear setup message, no fake transcript
+    // Real AI path (only when the local backend has Whisper + LLM): spoken audio -> transcript -> note
+    const whisperOn = await ev(`!!(V2RApp.state.backend&&V2RApp.state.backend.whisper.available)`);
+    console.log("   whisper available:", whisperOn);
     await ev(`document.querySelector('[data-action=new]').click()`);
-    await ev(`(()=>{const dt=new DataTransfer();dt.items.add(new File([new Uint8Array(5000)],'visit.wav',{type:'audio/wav'}));const i=document.querySelector('#v2rFile');i.files=dt.files;i.dispatchEvent(new Event('change'))})()`);
-    await ev(`document.querySelector('[data-action=process]').click()`);
-    await sleep(1500);
-    console.log("   whisper available:", await ev(`!!(V2RApp.state.backend&&V2RApp.state.backend.whisper.available)`));
-    check("audio w/o whisper: setup message, transcript stays empty", await ev(`V2RApp.state.backend&&V2RApp.state.backend.whisper.available ? true : (document.querySelector('#v2rSetup').textContent.includes('not configured') && document.querySelector('#v2rTranscript').value==='')`));
-    await shot("05-setup");
+    if (whisperOn && fs.existsSync("/tmp/v2r/test.aiff")) {
+        const b64 = fs.readFileSync("/tmp/v2r/test.aiff").toString("base64");
+        await ev(`(()=>{const bin=atob("${b64}");const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const dt=new DataTransfer();dt.items.add(new File([u],'visit.aiff',{type:'audio/aiff'}));const i=document.querySelector('#v2rFile');i.files=dt.files;i.dispatchEvent(new Event('change'))})()`);
+        await ev(`document.querySelector('[data-action=process]').click()`);
+        let ok = false;
+        for (let i = 0; i < 90 && !ok; i++) { await sleep(2000); ok = await ev(`!!V2RApp.state.doc || [...document.querySelectorAll('.v2r-stage.error')].length>0`); }
+        check("real Whisper transcript produced from audio", await ev(`/cough/i.test(document.querySelector('#v2rTranscript').value) && V2RApp.state.transcriptSource==='whisper'`), await ev(`document.querySelector('#v2rTranscript').value`));
+        check("real LLM/hybrid extraction produced note", await ev(`V2RApp.state.doc && /cough/i.test(V2RApp.state.doc.soap.subjective.chiefComplaint)`), await ev(`JSON.stringify(V2RApp.state.extractionInfo&&V2RApp.state.extractionInfo.notice)`));
+        console.log("   extraction mode:", await ev(`V2RApp.state.extractionInfo && V2RApp.state.extractionInfo.mode`));
+        check("prescribed medicine not lost, details only as spoken", await ev(`V2RApp.state.doc.prescription.meds.some(m=>m.strength==='500 mg')`));
+        await shot("05-real-ai");
+    } else {
+        await ev(`(()=>{const dt=new DataTransfer();dt.items.add(new File([new Uint8Array(5000)],'visit.wav',{type:'audio/wav'}));const i=document.querySelector('#v2rFile');i.files=dt.files;i.dispatchEvent(new Event('change'))})()`);
+        await ev(`document.querySelector('[data-action=process]').click()`);
+        await sleep(1500);
+        check("audio w/o whisper: setup message, transcript stays empty", await ev(`document.querySelector('#v2rSetup').textContent.includes('not configured') && document.querySelector('#v2rTranscript').value===''`));
+    }
 
     // responsive
     await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 900, deviceScaleFactor: 2, mobile: true });

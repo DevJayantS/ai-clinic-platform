@@ -50,6 +50,23 @@ async function status() {
     }
 }
 
+// Small local models often return null / nested objects for list fields. Flatten those benign shape
+// issues to plain strings; the strict schema validator and transcript-grounding checks still run after.
+function coerce(parsed) {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return parsed;
+    const flat = (x) => (x == null ? "" : typeof x === "string" ? x : typeof x === "object" ? Object.values(x).filter((v) => typeof v === "string" || typeof v === "number").join(" ") : String(x)).trim();
+    ["currentMedications", "allergies", "missingInfo"].forEach((k) => {
+        let v = parsed[k];
+        if (v == null) v = [];
+        if (!Array.isArray(v)) v = [v];
+        parsed[k] = v.map(flat).filter((s) => s && !/^(none|n\/a|not (stated|provided|mentioned))\.?$/i.test(s));
+    });
+    Object.keys(parsed).forEach((k) => { if (parsed[k] === null) parsed[k] = ""; });
+    if (Array.isArray(parsed.medications)) parsed.medications = parsed.medications.filter((m) => m && typeof m === "object" && flat(m.name));
+    if (parsed.vitals && typeof parsed.vitals === "object") Object.keys(parsed.vitals).forEach((k) => { if (parsed.vitals[k] == null) parsed.vitals[k] = ""; });
+    return parsed;
+}
+
 async function extractWithOllama(transcript) {
     const data = await ollamaFetch("/api/chat", {
         model: config.llm.model,
@@ -61,11 +78,31 @@ async function extractWithOllama(transcript) {
             { role: "user", content: "Transcript:\n\"\"\"\n" + transcript + "\n\"\"\"" },
         ],
     }, config.llm.timeoutMs);
-    const parsed = JSON.parse(data.message && data.message.content);
+    const parsed = coerce(JSON.parse(data.message && data.message.content));
     const v = C.validateExtraction(parsed);
     if (!v.ok) throw new Error("Model output failed schema validation: " + v.errors.slice(0, 3).join("; "));
     v.value.medications.forEach((m) => { m.verify = true; if (!m.sourceText) m.sourceText = C.findSnippet(transcript, m.name); });
-    return v.value;
+    return merge(v.value, C.basicExtract(transcript));
+}
+
+// Hybrid safety net: small local models mis-file or drop items (e.g. put a prescribed drug under
+// "current medications"). The rule-based extractor only copies verbatim transcript text, so:
+//  - empty LLM fields are filled from it,
+//  - prescribed medicines it found are added if the LLM missed them,
+//  - current-medication entries that are really the prescribed drugs are removed,
+//  - the LLM's free-form missingInfo is replaced by the rule-based list.
+function merge(llm, rules) {
+    ["patientId", "chiefComplaint", "presentIllness", "symptomDuration", "history", "examination", "testResults", "assessment", "investigations", "plan", "followUp"]
+        .forEach((k) => { if (!llm[k] && rules[k]) llm[k] = rules[k]; });
+    Object.keys(llm.vitals).forEach((k) => { if (!llm.vitals[k] && rules.vitals[k]) llm.vitals[k] = rules.vitals[k]; });
+    const names = new Set(llm.medications.map((m) => m.name.toLowerCase()));
+    rules.medications.forEach((m) => { if (!names.has(m.name.toLowerCase())) { llm.medications.push(m); names.add(m.name.toLowerCase()); } });
+    if (!rules.currentMedications.length) {
+        llm.currentMedications = llm.currentMedications.filter((s) => ![...names].some((n) => s.toLowerCase().includes(n)));
+    }
+    if (!llm.allergies.length) llm.allergies = rules.allergies;
+    llm.missingInfo = rules.missingInfo;
+    return llm;
 }
 
 async function extract(transcript) {

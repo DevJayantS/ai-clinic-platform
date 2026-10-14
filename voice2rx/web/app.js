@@ -35,7 +35,7 @@
     ];
     var MED_LABELS = [["name", "Medicine name"], ["strength", "Strength"], ["dose", "Dose"], ["route", "Route"], ["frequency", "Frequency"], ["timing", "Timing / food"], ["duration", "Duration"]];
     var NOTICE = "AI-generated draft \u2014 verify all clinical information before approval.";
-    var AUDIO_EXT = [".mp3", ".wav", ".m4a", ".mp4", ".webm", ".ogg", ".opus", ".flac", ".aac"];
+    var AUDIO_EXT = [".mp3", ".wav", ".m4a", ".mp4", ".webm", ".ogg", ".opus", ".flac", ".aac", ".aiff", ".aif"];
     var MAX_AUDIO = 50 * 1024 * 1024;
 
     // ------------------------------------------------------------------ state
@@ -489,9 +489,11 @@
         }
         var current = "extract";
         try {
-            setStage("extract", "processing", usingServer() ? "Extracting structured data\u2026" : "Extracting with simple rules (Demo Mode)\u2026");
+            // The sample consultation always uses the instant, deterministic rule-based path so live demos are repeatable.
+            var useAI = usingServer() && !isDemoData();
+            setStage("extract", "processing", useAI ? "Extracting structured data with the local model\u2026 (can take up to a minute)" : "Extracting with simple rules (no AI model)\u2026");
             await pace();
-            var r = await Api.extract(state.transcript, usingServer());
+            var r = await Api.extract(state.transcript, useAI);
             var v = C.validateExtraction(r.extraction);
             if (!v.ok) throw new Error("Extraction output failed schema validation: " + v.errors.slice(0, 2).join("; "));
             state.extractionInfo = r;

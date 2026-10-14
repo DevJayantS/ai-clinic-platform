@@ -97,3 +97,12 @@ node voice2rx/tests/e2e.js     # headless Chrome (macOS path) end-to-end demo fl
 - Browsers need `localhost` or HTTPS for microphone access.
 - Prescription Templates is a labelled placeholder. Print uses the browser print dialog (choose *Save as PDF*).
 - Dashboard stats/queue elsewhere on the page are pre-existing static mock data.
+- Whisper and the local LLM were tested end to end with synthetic speech (macOS `say`). Live microphone recording was not tested in headless Chrome (no mic).
+
+## Setup actually used on the dev machine (Intel Mac, Python 3.14)
+- PyAV and onnxruntime have no wheels for this Python, so `transcribe.py` falls back to the ffmpeg binary from `imageio-ffmpeg` and skips VAD:
+  `python3 -m venv voice2rx/.venv && voice2rx/.venv/bin/pip install --no-deps faster-whisper && voice2rx/.venv/bin/pip install ctranslate2 tokenizers huggingface_hub numpy imageio-ffmpeg`
+- Homebrew cannot install Ollama on Intel, so the official app binary was unzipped into `voice2rx/.tools/` and started with `voice2rx/.tools/Ollama.app/Contents/Resources/ollama serve`. Model: `llama3.2:3b` (set in the git-ignored `voice2rx/.env`, together with `WHISPER_PYTHON`).
+- The 3B model sometimes mis-files items, so its output is merged with the rule-based extractor (hybrid) and always re-validated. A larger model such as `llama3.1:8b` is more accurate but slower.
+- Whisper `base` can mishear drug names (amoxicillin was heard as "a Moxasil"); `WHISPER_MODEL=small` is more accurate.
+- The sample consultation always uses the instant rule-based path so live demos are repeatable.
