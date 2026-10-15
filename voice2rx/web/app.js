@@ -49,7 +49,17 @@
             stages: STAGE_DEFS.map(function (s) { return { key: s.key, title: s.title, state: "pending", detail: "" }; }),
             doc: null, issues: [], consultationId: null, dirty: false, processing: false, extractionInfo: null,
             backend: keep.backend || null, forceDemo: keep.forceDemo || false, setupNeeded: false, rec: "idle",
-            histQ: keep.histQ || "", histStatus: keep.histStatus || "all", histPatient: keep.histPatient || ""
+            histQ: keep.histQ || "", histStatus: keep.histStatus || "all", histPatient: keep.histPatient || "",
+            histSubView: keep.histSubView || "notes",
+            docPatientId: keep.docPatientId || 1,
+            docQuery: keep.docQuery || "",
+            docMode: keep.docMode || "exact",
+            docTab: keep.docTab || "search",
+            docPatients: [],
+            docSearchResults: null,
+            docSearching: false,
+            docUploading: false,
+            docModalData: null
         };
     }
 
@@ -81,7 +91,7 @@
             '<div class="v2r-doc"><span class="av">' + esc(doctorName.replace(/^dr\.?\s*/i, "").charAt(0).toUpperCase() || "D") + '</span><div><strong>' + esc(doctorName) + '</strong><small>Medical Doctor</small></div></div>' +
             "</div></header>" +
             '<nav class="v2r-nav" role="tablist" aria-label="Voice2Rx sections">' +
-            [["workspace", "mic", "Voice2Rx"], ["patients", "users", "Patients"], ["history", "clock", "Consultation History"], ["templates", "clip", "Prescription Templates"], ["settings", "cog", "Settings"]]
+            [["workspace", "mic", "Voice2Rx"], ["patients", "users", "Patients"], ["history", "clock", "Consultation History"], ["lab-reports", "activity", "Lab Reports & Trends"], ["templates", "clip", "Prescription Templates"], ["settings", "cog", "Settings"]]
                 .map(function (n) { return '<button role="tab" data-action="page" data-page="' + n[0] + '" id="v2rNav-' + n[0] + '">' + I(n[1]) + n[2] + (n[0] === "templates" ? ' <span class="soon">Placeholder</span>' : "") + "</button>"; }).join("") +
             "</nav>" +
             '<section id="v2rPage-workspace" role="tabpanel" aria-labelledby="v2rNav-workspace">' + workspaceHtml() + "</section>" +
@@ -127,7 +137,7 @@
             '<div class="v2r-col v2r-col-out"><section class="v2r-card" aria-labelledby="v2rH5"><h2 id="v2rH5">' + I("clip") + " Clinical output</h2><div style=\"height:12px\"></div>" +
             '<div class="v2r-tabs" role="tablist" aria-label="Clinical output">' +
             [["soap", "SOAP Note"], ["rx", "Prescription"], ["summary", "Summary"]].map(function (t) { return '<button role="tab" data-action="tab" data-tab="' + t[0] + '" id="v2rTab-' + t[0] + '">' + t[1] + "</button>"; }).join("") + "</div>" +
-            '<div id="v2rOutEmpty" class="v2r-empty">' + I("file") + 'No draft yet. Record or upload audio, enter a transcript, then press <b>Process consultation</b>.<br><br><button class="v2r-btn primary" data-action="sample">' + I("flask") + "Load Sample Consultation</button></div>" +
+            '<div id="v2rOutEmpty" class="v2r-empty">' + I("file") + '<div style="margin-bottom:6px;font-weight:600">No consultation draft active yet.</div><span class="sub" style="display:block;margin-bottom:14px">Record audio, enter a transcript, or click below to start a direct SOAP Note entry:</span><div class="v2r-row" style="justify-content:center;gap:10px"><button class="v2r-btn primary" data-action="blank-draft">' + I("clip") + 'Start Direct SOAP Note</button><button class="v2r-btn" data-action="sample">' + I("flask") + "Load Sample Consultation</button></div></div>" +
             '<div id="v2rPanel-soap" role="tabpanel" hidden></div><div id="v2rPanel-rx" role="tabpanel" hidden></div><div id="v2rPanel-summary" role="tabpanel" hidden></div>' +
             "</section></div></div>";
     }
@@ -285,7 +295,7 @@
     function renderOutput() {
         var has = !!state.doc;
         $("#v2rOutEmpty").hidden = has;
-        ["soap", "rx", "summary"].forEach(function (t) { $("#v2rTab-" + t).disabled = !has; });
+        ["soap", "rx", "summary"].forEach(function (t) { $("#v2rTab-" + t).disabled = false; });
         if (has) { renderSoap(); renderRx(); renderSummary(); }
         showTab(state.tab);
         revalidate();
@@ -300,19 +310,30 @@
     }
 
     function renderSoap() {
+        if (!state.doc) return;
+        if (!state.doc.soap) {
+            state.doc.soap = {
+                subjective: { chiefComplaint: "", symptoms: "", history: "" },
+                objective: { examination: "", vitals: "", tests: "" },
+                assessment: { assessment: "" },
+                plan: { investigations: "", treatment: "", followUp: "" }
+            };
+        }
         var d = state.doc.soap;
         var html = '<div class="v2r-notice">' + I("alert") + "<span>" + NOTICE + (isDemoData() ? " DEMO DATA." : "") + "</span></div>";
         SOAP.forEach(function (sec) {
             html += '<div class="v2r-sec"><h3><span class="l">' + sec.l + "</span>" + sec.t + "</h3>";
             sec.f.forEach(function (f) {
+                var secObj = (d && d[f[0]]) || {};
+                var val = secObj[f[1]] || "";
                 html += fieldHtml(f[0] + "." + f[1], f[2], function (id, v) {
                     return '<textarea id="' + id + '" rows="' + f[3] + '" data-bind="soap" data-sec="' + f[0] + '" data-key="' + f[1] + '" placeholder="Not provided \u2014 clinician input required">' + esc(v) + "</textarea>";
-                }, d[f[0]][f[1]]);
+                }, val);
             });
             html += "</div>";
         });
-        html += '<div class="v2r-actions"><button class="v2r-btn" data-action="regen">' + I("refresh") + "Regenerate from transcript</button>" +
-            '<div class="v2r-row"><button class="v2r-btn" data-action="copy" data-what="soap">' + I("copy") + "Copy</button><button class=\"v2r-btn\" data-action=\"save\">" + I("save") + "Save draft</button><button class=\"v2r-btn primary\" data-action=\"print\" data-what=\"soap\">" + I("printer") + "Print / PDF</button></div></div>";
+        html += '<div class="v2r-actions"><button class="v2r-btn" data-action="regen">' + I("refresh") + 'Regenerate from transcript</button>' +
+            '<div class="v2r-row"><button class="v2r-btn" data-action="copy" data-what="soap">' + I("copy") + 'Copy</button><button class="v2r-btn" data-action="save">' + I("save") + 'Save draft</button><button class="v2r-btn primary" data-action="print" data-what="soap">' + I("printer") + 'Print / PDF</button></div></div>';
         $("#v2rPanel-soap").innerHTML = html;
     }
 
@@ -501,11 +522,15 @@
 
             current = "validate";
             setStage("validate", "processing", "Checking against the transcript\u2026"); await pace();
-            var doc = C.docFromExtraction(v.value);
+            if (!patient() && v.value.patientId) {
+                var match = PATIENTS.find(function (p) { return p.id.toLowerCase() === v.value.patientId.toLowerCase() || p.name.toLowerCase() === v.value.patientId.toLowerCase(); });
+                if (match) { state.patientId = match.id; renderPatientSelect(); }
+            }
+            var doc = C.docFromExtraction(v.value, patient());
             doc.demo = isDemoData();
             state.processedTranscript = state.transcript;
             state.doc = doc; state.issues = C.validateDocument(doc, state.transcript, patient(), {});
-            doc.summary = C.buildSummary(doc);
+            doc.summary = C.buildSummary(doc, patient(), doctorName);
             var n = state.issues.filter(function (i) { return i.severity !== "info"; }).length;
             setStage("validate", "done", n + " item" + (n === 1 ? "" : "s") + " need review");
 
@@ -514,10 +539,6 @@
             state.dirty = true; state.tab = "soap";
             renderOutput();
             setStage("note", "done", "Draft ready \u2014 doctor review required");
-            if (!patient() && v.value.patientId) {
-                var match = PATIENTS.find(function (p) { return p.id.toLowerCase() === v.value.patientId.toLowerCase(); });
-                if (match) { state.patientId = match.id; renderPatientSelect(); revalidate(); }
-            }
             toast("Draft generated. Please review before saving or approving.");
         } catch (e) {
             setStage(current, "error", e.message || "Unexpected error");
@@ -552,7 +573,7 @@
     function currentText(what) {
         if (what === "soap") return C.buildSoapText(state.doc, patient());
         if (what === "rx") return C.buildRxText(state.doc, patient());
-        return (isDemoData() ? "CONSULTATION SUMMARY (DEMO DATA)\n" : "CONSULTATION SUMMARY\n") + "Patient: " + (patient() ? patient().name : "Not selected") + "\n\n" + state.doc.summary + "\n\n" + NOTICE;
+        return state.doc.summary + "\n\n" + NOTICE;
     }
 
     async function copyText(text) {
@@ -578,16 +599,19 @@
     }
 
     function printHtml(what) {
-        var p = patient(), d = state.doc, s = d.soap, rx = d.prescription;
+        var p = patient(), d = state.doc || {}, s = d.soap || {}, rx = d.prescription || { meds: [] };
         function v(x) { return esc((x || "").trim() || "Not provided"); }
         var head = "<h1>" + (what === "rx" ? "Prescription" : what === "soap" ? "Consultation Note (SOAP)" : "Consultation Summary") + "</h1>" +
-            "<p><b>Patient:</b> " + esc(p ? p.name + " (" + p.id + ")" : "Not selected") + "&nbsp;&nbsp; <b>Date:</b> " + esc(rx.date) + "&nbsp;&nbsp; <b>Doctor:</b> " + esc(doctorName) + "</p>";
+            "<p><b>Patient:</b> " + esc(p ? p.name + " (" + p.id + ")" : "Not selected") + "&nbsp;&nbsp; <b>Date:</b> " + esc(rx.date || new Date().toISOString().slice(0, 10)) + "&nbsp;&nbsp; <b>Doctor:</b> " + esc(doctorName) + "</p>";
         var wm = (isDemoData() ? '<div class="wm">DEMO DATA \u2014 NOT REAL MEDICAL ADVICE</div> ' : "") + (what === "rx" && !rx.approved || what !== "rx" ? '<div class="wm">DRAFT \u2014 NOT CLINICALLY VERIFIED</div>' : "");
         var body = "";
         if (what === "soap") {
             SOAP.forEach(function (sec) {
                 body += "<h2>" + sec.l + " \u2014 " + sec.t + "</h2>";
-                sec.f.forEach(function (f) { body += "<p><b>" + esc(f[2]) + ":</b> " + v(s[f[0]][f[1]]) + "</p>"; });
+                sec.f.forEach(function (f) {
+                    var secObj = (s && s[f[0]]) || {};
+                    body += "<p><b>" + esc(f[2]) + ":</b> " + v(secObj[f[1]]) + "</p>";
+                });
             });
         } else if (what === "rx") {
             body += "<h2>Medicines</h2>";
@@ -613,25 +637,60 @@
     // ------------------------------------------------------------------ pages: patients / history / templates / settings
     function lastVisitMap() { return Api.store.list().then(function (l) { var m = {}; l.forEach(function (c) { if (!m[c.patient.id] || m[c.patient.id] < c.updatedAt) m[c.patient.id] = c.updatedAt; }); return m; }); }
 
+    function highlightSearchTerms(text, query) {
+        if (!query || !query.trim()) return esc(text);
+        var tokens = query.trim().split(/\s+/).filter(Boolean);
+        if (!tokens.length) return esc(text);
+        var safe = esc(text);
+        tokens.forEach(function (tok) {
+            try {
+                var rg = new RegExp("(?<![a-zA-Z0-9])(" + esc(tok).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")(?![a-zA-Z0-9])", "gi");
+                safe = safe.replace(rg, '<mark class="v2r-doc-match">$1</mark>');
+            } catch (e) { }
+        });
+        return safe;
+    }
+
     async function renderPatientsPage() {
         var el = $("#v2rPage-patients");
         var last = await lastVisitMap().catch(function () { return {}; });
         el.innerHTML = '<section class="v2r-card"><h2>' + I("users") + " Patients</h2><p class=\"sub\">Synthetic demo patients. Starting a consultation opens the Voice2Rx workspace for that patient.</p><div class=\"v2r-scroll\"><table class=\"v2r-table\"><thead><tr><th>Name</th><th>ID</th><th>Age</th><th>Last Voice2Rx note</th><th></th></tr></thead><tbody>" +
             PATIENTS.map(function (p) {
                 return "<tr><td><b>" + esc(p.name) + "</b>" + (p.note ? ' <span class="v2r-badge demo">Demo</span>' : "") + "</td><td>" + esc(p.id) + "</td><td>" + esc(p.age || "\u2014") + "</td><td>" + (last[p.id] ? esc(new Date(last[p.id]).toLocaleString()) : "\u2014") + "</td>" +
-                    '<td><div class="v2r-row"><button class="v2r-btn sm primary" data-action="start-for" data-id="' + esc(p.id) + '">' + I("mic") + 'Start consultation</button><button class="v2r-btn sm" data-action="hist-for" data-id="' + esc(p.id) + '">History</button></div></td></tr>';
+                    '<td><div class="v2r-row"><button class="v2r-btn sm primary" data-action="start-for" data-id="' + esc(p.id) + '">' + I("mic") + 'Start consultation</button><button class="v2r-btn sm" data-action="hist-for" data-id="' + esc(p.id) + '">History</button><button class="v2r-btn sm" data-action="docs-for" data-id="' + esc(p.id) + '" title="Search medical reports">' + I("search") + 'Reports</button></div></td></tr>';
             }).join("") + "</tbody></table></div></section>";
     }
 
     async function renderHistoryPage() {
         var el = $("#v2rPage-history");
-        el.innerHTML = '<section class="v2r-card"><h2>' + I("clock") + " Consultation history</h2><p class=\"sub\" id=\"v2rHistSub\"></p>" +
-            '<div class="v2r-filters"><input type="search" id="v2rHistQ" data-bind="hist-q" aria-label="Search consultations" placeholder="Search patient, complaint, medicine\u2026" value="' + esc(state.histQ) + '">' +
+        var isNotes = state.histSubView === "notes";
+        el.innerHTML = '<section class="v2r-card">' +
+            '<div class="v2r-row" style="justify-content:space-between; align-items:flex-start; margin-bottom:12px;">' +
+            '<div><h2>' + I("clock") + " Consultation &amp; Medical Records History</h2>" +
+            '<p class="sub" id="v2rHistSub">' + (isNotes ? (Api.reachable ? "Stored by the local Voice2Rx server (JSON file, development only)." : "Demo storage: kept only for this browser tab session. Use synthetic data only.") : "Isolated medical document search across PDF, DOCX, and TXT clinical reports (ClinicOS).") + "</p></div>" +
+            '<div class="v2r-row"><button class="v2r-btn sm" data-action="reseed-demo-docs">' + I("refresh") + "Reset Demo Reports</button></div></div>" +
+            '<div class="v2r-subnav" role="tablist">' +
+            '<button class="v2r-subnav-btn ' + (isNotes ? "active" : "") + '" data-action="hist-subview" data-sub="notes">' + I("file") + "Voice2Rx Consultations</button>" +
+            '<button class="v2r-subnav-btn ' + (!isNotes ? "active" : "") + '" data-action="hist-subview" data-sub="documents">' + I("search") + "Medical Document Search (ClinicOS)</button>" +
+            "</div>" +
+            '<div id="v2rHistInner"></div></section>' +
+            (state.docModalData ? renderDocModalHtml() : "");
+
+        if (isNotes) {
+            renderHistoryNotesView();
+        } else {
+            await renderDocumentSearchSection();
+        }
+    }
+
+    function renderHistoryNotesView() {
+        var wrap = $("#v2rHistInner");
+        if (!wrap) return;
+        wrap.innerHTML = '<div class="v2r-filters"><input type="search" id="v2rHistQ" data-bind="hist-q" aria-label="Search consultations" placeholder="Search patient, complaint, medicine\u2026" value="' + esc(state.histQ) + '">' +
             '<select id="v2rHistStatus" data-bind="hist-status" aria-label="Filter by status">' + [["all", "All statuses"], ["draft", "Draft"], ["approved", "Approved"]].map(function (o) { return '<option value="' + o[0] + '"' + (state.histStatus === o[0] ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select>" +
             '<select id="v2rHistPatient" data-bind="hist-patient" aria-label="Filter by patient"><option value="">All patients</option>' + PATIENTS.map(function (p) { return '<option value="' + esc(p.id) + '"' + (state.histPatient === p.id ? " selected" : "") + ">" + esc(p.name) + "</option>"; }).join("") + "</select></div>" +
-            '<div id="v2rHistList" class="v2r-hist"></div></section>';
-        $("#v2rHistSub").textContent = Api.reachable ? "Stored by the local Voice2Rx server (JSON file, development only)." : "Demo storage: kept only for this browser tab session. Use synthetic data only.";
-        await renderHistoryList();
+            '<div id="v2rHistList" class="v2r-hist"></div>';
+        renderHistoryList();
     }
 
     async function renderHistoryList() {
@@ -642,15 +701,282 @@
             if (state.histStatus !== "all" && c.status !== state.histStatus) return false;
             if (state.histPatient && c.patient.id !== state.histPatient) return false;
             if (!q) return true;
-            return (c.patient.name + " " + c.patient.id + " " + JSON.stringify(c.doc.soap) + " " + c.doc.prescription.meds.map(function (m) { return m.name; }).join(" ")).toLowerCase().indexOf(q) !== -1;
+            var sJson = (c.doc && c.doc.soap) ? JSON.stringify(c.doc.soap) : "";
+            var mStr = (c.doc && c.doc.prescription && c.doc.prescription.meds) ? c.doc.prescription.meds.map(function (m) { return m.name || ""; }).join(" ") : "";
+            return (c.patient.name + " " + c.patient.id + " " + sJson + " " + mStr).toLowerCase().indexOf(q) !== -1;
         });
         $("#v2rHistList").innerHTML = list.length ? list.map(function (c) {
-            var s = c.doc.soap, meds = c.doc.prescription.meds.map(function (m) { return m.name; }).filter(Boolean);
+            var s = (c.doc && c.doc.soap) || {};
+            var subj = s.subjective || {};
+            var assess = s.assessment || {};
+            var rx = (c.doc && c.doc.prescription) || { meds: [] };
+            var meds = (rx.meds || []).map(function (m) { return m.name; }).filter(Boolean);
             return '<article class="item"><div class="v2r-row" style="justify-content:space-between"><b>' + esc(c.patient.name) + '</b><span class="v2r-row"><span class="v2r-badge ' + c.status + '">' + (c.status === "approved" ? "Approved" : "Draft") + "</span>" + (c.demo ? '<span class="v2r-badge demo">Demo</span>' : "") + "</span></div>" +
                 '<div class="sub" style="margin:2px 0 0">' + esc(new Date(c.updatedAt).toLocaleString()) + " \u00b7 " + esc(c.patient.id) + "</div>" +
-                '<div class="prev"><b>SOAP:</b> ' + esc(s.subjective.chiefComplaint || "Chief complaint not provided") + " \u2014 Assessment: " + esc(s.assessment.assessment || "not stated") + "<br><b>Rx:</b> " + (meds.length ? esc(meds.join(", ")) : "No medicines") + "</div>" +
+                '<div class="prev"><b>SOAP:</b> ' + esc(subj.chiefComplaint || "Chief complaint not provided") + " \u2014 Assessment: " + esc(assess.assessment || "not stated") + "<br><b>Rx:</b> " + (meds.length ? esc(meds.join(", ")) : "No medicines") + "</div>" +
                 '<button class="v2r-btn sm primary" data-action="open" data-id="' + esc(c.id) + '">Open &amp; edit</button></article>';
         }).join("") : '<div class="v2r-empty" style="grid-column:1/-1">' + I("clock") + "No saved consultations match. Save a draft from the workspace to see it here.</div>";
+    }
+
+    async function renderDocumentSearchSection() {
+        var wrap = $("#v2rHistInner");
+        if (!wrap) return;
+
+        if (!state.docPatients || state.docPatients.length === 0) {
+            wrap.innerHTML = '<div class="v2r-empty" style="padding:30px">' + I("loader", "spin") + " Loading ClinicOS medical document engine...</div>";
+            try {
+                state.docPatients = await Api.documents.listPatients();
+            } catch (e) {
+                wrap.innerHTML = '<div class="v2r-banner err">' + I("alert") + "<div>Failed to load medical document records: " + esc(e.message) + "</div></div>";
+                return;
+            }
+        }
+
+        var patients = state.docPatients || [];
+        var activePat = patients.find(function (p) { return p.id === state.docPatientId || p.patient_code === String(state.docPatientId); }) || patients[0];
+        if (activePat) state.docPatientId = activePat.id;
+
+        var chips = ["Allergy", "Penicillin", "Discharged", "CBC", "Lipid Profile", "CT Abdomen", "MRI", "Blood Glucose", "Skin-Prick"];
+
+        var html = '<div class="v2r-patient-banner">' +
+            '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">' +
+            '<span class="v2r-pat-badge">' + esc(activePat ? activePat.patient_code : "PAT-2001") + '</span>' +
+            '<div><strong style="font-size:15px; color:#0f172a">' + esc(activePat ? activePat.display_name : "Select Patient") + '</strong>' +
+            '<div style="font-size:12px; color:var(--ink-3); margin-top:1px;">' + (activePat.age ? esc(activePat.age) + ' yrs' : '') + (activePat.gender ? ' · ' + esc(activePat.gender) : '') + ' · <span style="font-weight:600; color:#2563eb;">' + (activePat.document_count || 0) + ' documents indexed</span></div></div>' +
+            '</div>' +
+            '<div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">' +
+            '<label style="font-size:13px; font-weight:600; color:var(--ink-2); display:flex; align-items:center; gap:6px;">Patient:' +
+            '<select id="v2rDocPatSelect" data-bind="doc-patient-select" style="padding:6px 10px; font-size:13.5px; border-radius:6px; border:1px solid #cbd5e1;">' +
+            patients.map(function (p) {
+                return '<option value="' + esc(p.id) + '"' + (activePat && activePat.id === p.id ? ' selected' : '') + '>' + esc(p.patient_code) + ' \u2014 ' + esc(p.display_name) + ' (' + (p.document_count || 0) + ' docs)</option>';
+            }).join('') +
+            '</select></label>' +
+            '<button class="v2r-btn sm primary" data-action="doc-upload-trigger">' + I("upload") + 'Upload Report</button>' +
+            '<input type="file" id="v2rDocFileInput" accept=".pdf,.docx,.txt" style="display:none">' +
+            '</div>' +
+            '</div>';
+
+        // Search bar
+        html += '<div style="margin-bottom:12px;">' +
+            '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">' +
+            '<div style="position:relative; flex:1; min-width:240px;">' +
+            '<input type="search" id="v2rDocSearchQ" data-bind="doc-search-q" placeholder="Search reports (e.g. allergy, penicillin, discharged, CBC, MRI)..." value="' + esc(state.docQuery) + '" style="width:100%; height:40px; padding:0 36px 0 12px; font-size:14px; border:1px solid #cbd5e1; border-radius:8px;">' +
+            (state.docQuery ? '<button class="v2r-btn sm" data-action="doc-clear-search" style="position:absolute; right:6px; top:6px; height:28px; padding:0 8px; border:none; background:transparent; color:#64748b;" title="Clear search">' + I("x") + '</button>' : '') +
+            '</div>' +
+            '<button class="v2r-btn sm" data-action="doc-toggle-mode" style="height:40px; padding:0 12px; font-size:13px; font-weight:600;" title="Click to toggle exact / flexible mode">' +
+            (state.docMode === "exact" ? 'Mode: Exact Match' : 'Mode: Flexible (Plurals)') +
+            '</button>' +
+            '<button class="v2r-btn primary" data-action="doc-search" style="height:40px; padding:0 16px; font-size:14px; font-weight:600;">' + I("search") + 'Search Records</button>' +
+            '</div>' +
+            '<div class="v2r-chip-list"><span class="v2r-chip-label">Quick Clinical Chips:</span>' +
+            chips.map(function (c) {
+                var isActive = state.docQuery.toLowerCase() === c.toLowerCase();
+                return '<button class="v2r-chip ' + (isActive ? 'active' : '') + '" data-action="doc-chip" data-term="' + esc(c) + '">' + esc(c) + '</button>';
+            }).join('') +
+            '</div>' +
+            '</div>';
+
+        // Subtabs: Search Results vs Document Repository
+        html += '<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; margin-bottom:14px; padding-bottom:6px;">' +
+            '<div style="display:flex; gap:6px;">' +
+            '<button class="v2r-btn sm ' + (state.docTab === 'search' ? 'primary' : '') + '" data-action="doc-tab" data-tab="search">' + I("search") + 'Search Results' + (state.docSearchResults ? ' (' + state.docSearchResults.total_matches + ')' : '') + '</button>' +
+            '<button class="v2r-btn sm ' + (state.docTab === 'repo' ? 'primary' : '') + '" data-action="doc-tab" data-tab="repo">' + I("folder") + 'Patient Documents (' + (activePat ? activePat.document_count || 0 : 0) + ')</button>' +
+            '</div>' +
+            '<div style="font-size:12px; color:#64748b; display:flex; align-items:center; gap:4px;">' + I("shield") + 'Strict Patient Isolation Active</div>' +
+            '</div>';
+
+        // Content
+        if (state.docTab === 'search') {
+            html += await renderDocSearchResultsHtml(activePat);
+        } else {
+            html += await renderDocRepoHtml(activePat);
+        }
+
+        wrap.innerHTML = html;
+
+        var searchInput = $("#v2rDocSearchQ");
+        if (searchInput) {
+            searchInput.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    executeDocSearch(this.value.trim());
+                }
+            });
+        }
+    }
+
+    async function executeDocSearch(query) {
+        state.docQuery = query;
+        state.docTab = "search";
+        if (!query.trim()) {
+            state.docSearchResults = null;
+            renderDocumentSearchSection();
+            return;
+        }
+
+        state.docSearching = true;
+        renderDocumentSearchSection();
+
+        try {
+            var res = await Api.documents.searchPatientDocuments(state.docPatientId, query.trim(), state.docMode, 1, 100);
+            state.docSearchResults = res;
+        } catch (e) {
+            toast("Search failed: " + e.message, "err");
+            state.docSearchResults = null;
+        } finally {
+            state.docSearching = false;
+            renderDocumentSearchSection();
+        }
+    }
+
+    async function renderDocSearchResultsHtml(patient) {
+        if (state.docSearching) {
+            return '<div class="v2r-empty" style="padding:40px">' + I("loader", "spin") + ' Searching indexed medical reports...</div>';
+        }
+        if (!state.docSearchResults) {
+            return '<div class="v2r-empty" style="padding:36px; border:2px dashed #e2e8f0; border-radius:12px;">' +
+                I("search") + '<br><b>Patient Medical Document Search</b><br><span style="font-size:13px; color:var(--ink-3);">Search across all clinical discharge summaries, laboratory panels, and radiology scans for <b>' + esc(patient.display_name) + ' (' + esc(patient.patient_code) + ')</b>.<br>Type a medical term above or click one of the quick clinical chips (e.g. <em>Allergy</em>, <em>Penicillin</em>, <em>Discharged</em>).</span></div>';
+        }
+
+        var res = state.docSearchResults;
+        if (res.total_matches === 0) {
+            return '<div class="v2r-banner info" style="margin-bottom:14px;">' + I("info") + '<div>No occurrences found for <b>"' + esc(res.query) + '"</b> in <b>' + esc(patient.display_name) + '</b>\'s documents.<br><span style="font-size:12.5px; color:#475569;">Try flexible search mode, or search for other terms such as <code>fever</code>, <code>blood</code>, <code>medication</code>, or <code>examination</code>.</span></div></div>';
+        }
+
+        var out = '<div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+            '<div style="font-size:13.5px; color:#1e40af;">Found <b>' + res.total_matches + ' match' + (res.total_matches === 1 ? '' : 'es') + '</b> across <b>' + res.matching_documents_count + ' document' + (res.matching_documents_count === 1 ? '' : 's') + '</b> for <b>"' + esc(res.query) + '"</b> in <em>' + esc(res.patient_name) + ' (' + esc(res.patient_code) + ')</em></div>' +
+            '<div style="font-size:12px; color:#3b82f6; font-weight:600;">Mode: ' + (res.mode === 'exact' ? 'Exact Match' : 'Flexible') + '</div>' +
+            '</div>' +
+            '<div class="v2r-occ-list">';
+
+        res.results.forEach(function (occ) {
+            var fType = (occ.file_type || "txt").toLowerCase();
+            var badgeClass = fType === "pdf" ? "v2r-badge-pdf" : fType === "docx" ? "v2r-badge-docx" : "v2r-badge-txt";
+            out += '<article class="v2r-occ-item">' +
+                '<div class="v2r-occ-header">' +
+                '<span class="v2r-occ-title"><span class="' + badgeClass + '">' + fType.toUpperCase() + '</span>' + esc(occ.document_filename) + '</span>' +
+                '<span class="v2r-occ-meta">Page ' + occ.page_number + ' (' + esc(occ.segment_type) + ') · Method: ' + esc(occ.extraction_method) + '</span>' +
+                '</div>' +
+                '<div class="v2r-occ-excerpt">' + highlightSearchTerms(occ.context_excerpt, res.query) + '</div>' +
+                '<div class="v2r-occ-footer">' +
+                '<span style="color:#64748b; font-size:11.5px; font-family:monospace;">Offsets: [' + occ.start_offset + ', ' + occ.end_offset + ']</span>' +
+                '<div class="v2r-row" style="gap:6px;">' +
+                '<button class="v2r-btn sm primary" data-action="doc-preview" data-id="' + occ.document_id + '" data-filename="' + esc(occ.document_filename) + '">' + I("eye") + 'Preview</button>' +
+                '<button class="v2r-btn sm" data-action="doc-download" data-id="' + occ.document_id + '">' + I("download") + 'Download</button>' +
+                '</div></div></article>';
+        });
+
+        out += '</div>';
+        return out;
+    }
+
+    async function renderDocRepoHtml(patient) {
+        var docs = [];
+        try {
+            docs = await Api.documents.listPatientDocuments(patient.id);
+        } catch (e) {
+            return '<div class="v2r-banner err">' + esc(e.message) + '</div>';
+        }
+
+        if (!docs.length) {
+            return '<div class="v2r-empty" style="padding:30px;">' + I("folder") + 'No documents uploaded yet for this patient.<br><button class="v2r-btn sm primary" data-action="doc-upload-trigger" style="margin-top:10px;">' + I("upload") + 'Upload First Document</button></div>';
+        }
+
+        var html = '<div class="v2r-scroll"><table class="v2r-table"><thead><tr><th>Document Name</th><th>Format</th><th>Size</th><th>Pages</th><th>Uploaded</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+        docs.forEach(function (d) {
+            var fType = (d.file_type || "txt").toLowerCase();
+            var badgeClass = fType === "pdf" ? "v2r-badge-pdf" : fType === "docx" ? "v2r-badge-docx" : "v2r-badge-txt";
+            var sizeStr = d.file_size ? (d.file_size > 1024 * 1024 ? (d.file_size / (1024 * 1024)).toFixed(1) + ' MB' : Math.round(d.file_size / 1024) + ' KB') : '—';
+            html += '<tr>' +
+                '<td><b>' + esc(d.original_filename) + '</b></td>' +
+                '<td><span class="' + badgeClass + '">' + fType.toUpperCase() + '</span></td>' +
+                '<td>' + sizeStr + '</td>' +
+                '<td>' + (d.page_count || 1) + '</td>' +
+                '<td>' + new Date(d.uploaded_at).toLocaleDateString() + '</td>' +
+                '<td><span class="v2r-badge approved">' + esc(d.processing_status || "completed") + '</span></td>' +
+                '<td><div class="v2r-row" style="gap:4px;">' +
+                '<button class="v2r-btn sm primary" data-action="doc-preview" data-id="' + d.id + '" data-filename="' + esc(d.original_filename) + '">' + I("eye") + 'Preview</button>' +
+                '<button class="v2r-btn sm" data-action="doc-download" data-id="' + d.id + '">' + I("download") + 'File</button>' +
+                '<button class="v2r-btn sm" data-action="doc-reprocess" data-id="' + d.id + '" title="Re-index document">' + I("refresh") + '</button>' +
+                '<button class="v2r-btn sm" data-action="doc-delete" data-id="' + d.id + '" title="Delete document">' + I("trash") + '</button>' +
+                '</div></td>' +
+                '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        return html;
+    }
+
+    async function openDocPreview(docId, filename, query) {
+        toast("Loading document preview...", "info");
+        try {
+            var segs = await Api.documents.getDocumentSegments(docId);
+            var docMeta = await Api.documents.getDocument(docId);
+            state.docModalData = {
+                id: docId,
+                filename: filename,
+                meta: docMeta,
+                segments: segs,
+                query: query || state.docQuery || ""
+            };
+            renderHistoryPage();
+        } catch (e) {
+            toast("Failed to load document content: " + e.message, "err");
+        }
+    }
+
+    function renderDocModalHtml() {
+        var d = state.docModalData;
+        if (!d) return "";
+        var q = d.query;
+        var fType = (d.meta.file_type || "txt").toLowerCase();
+        var badgeClass = fType === "pdf" ? "v2r-badge-pdf" : fType === "docx" ? "v2r-badge-docx" : "v2r-badge-txt";
+
+        var bodyHtml = '';
+        if (d.segments && d.segments.length > 0) {
+            bodyHtml = d.segments.map(function (s) {
+                return '<div style="margin-bottom:16px; padding:12px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">' +
+                    '<div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px; text-transform:uppercase;">Page / Section ' + s.page_number + ' (' + esc(s.segment_type) + ')</div>' +
+                    '<div style="white-space:pre-wrap; font-family:monospace, sans-serif; font-size:13px; line-height:1.6; color:#1e293b;">' +
+                    highlightSearchTerms(s.content, q) +
+                    '</div></div>';
+            }).join('');
+        } else {
+            bodyHtml = '<div class="v2r-empty">No extracted text segments available for preview.</div>';
+        }
+
+        return '<div class="v2r-modal-backdrop" id="v2rDocModalWrap" role="dialog" aria-modal="true">' +
+            '<div class="v2r-modal">' +
+            '<div class="v2r-modal-header">' +
+            '<div class="v2r-modal-title"><span class="' + badgeClass + '">' + fType.toUpperCase() + '</span>' + esc(d.filename) + '</div>' +
+            '<button class="v2r-modal-close" data-action="doc-close-modal" aria-label="Close modal">' + I("x") + '</button>' +
+            '</div>' +
+            '<div class="v2r-modal-body">' +
+            (q ? '<div style="background:#fef9c3; border:1px solid #fde047; padding:6px 12px; border-radius:6px; font-size:12.5px; color:#854d0e; margin-bottom:14px;">Highlighting occurrences of <b>"' + esc(q) + '"</b> in yellow below:</div>' : '') +
+            bodyHtml +
+            '</div>' +
+            '<div class="v2r-modal-footer">' +
+            '<button class="v2r-btn sm" data-action="doc-download" data-id="' + d.id + '">' + I("download") + 'Download File</button>' +
+            '<button class="v2r-btn sm primary" data-action="doc-close-modal">Close</button>' +
+            '</div></div></div>';
+    }
+
+    async function handleDocUpload(file) {
+        if (!file) return;
+        toast("Uploading and indexing " + file.name + "...", "info");
+        try {
+            await Api.documents.uploadDocument(state.docPatientId, file);
+            toast(file.name + " uploaded and indexed successfully!", "ok");
+            state.docPatients = await Api.documents.listPatients();
+            if (state.docQuery.trim()) {
+                executeDocSearch(state.docQuery.trim());
+            } else {
+                renderHistoryPage();
+            }
+        } catch (e) {
+            toast("Upload failed: " + e.message, "err");
+        }
     }
 
     function renderTemplatesPage() {
@@ -701,7 +1027,19 @@
 
     // ------------------------------------------------------------------ events
     var actions = {
-        page: function (b) { showPage(b.dataset.page); },
+        page: function (b) {
+            if (b.dataset.page === "lab-reports") {
+                location.hash = "lab-reports";
+                showView("lab-reports");
+                return;
+            }
+            showPage(b.dataset.page);
+        },
+        "lab-for": function (b) {
+            location.hash = "lab-reports";
+            if (window.ClinicOSLabReports) window.ClinicOSLabReports.setPatient(b.dataset.id);
+            showView("lab-reports");
+        },
         "rec-start": startRec,
         "rec-pause": function () { if (recorder && recorder.pause()) { state.rec = "paused"; renderRecUI(); } else toast("Pause is not supported in this browser.", "err"); },
         "rec-resume": function () { if (recorder && recorder.resume()) { state.rec = "recording"; renderRecUI(); } },
@@ -721,11 +1059,56 @@
         },
         "dismiss-setup": function () { state.setupNeeded = false; renderSetup(); },
         sample: loadSample,
-        "new": function () { if (confirmDiscard()) resetSession(""); },
-        tab: function (b) { if (state.doc) showTab(b.dataset.tab); },
+        "new": function () {
+            if (confirmDiscard()) {
+                resetSession("");
+                state.doc = C.emptyDoc(patient());
+                state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+                state.dirty = false;
+                state.tab = "soap";
+                renderOutput();
+                toast("New consultation draft ready. You can edit SOAP notes directly or record/enter a transcript.", "info");
+            }
+        },
+        "blank-draft": function () {
+            if (!state.doc) {
+                state.doc = C.emptyDoc(patient());
+                state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+                state.dirty = false;
+                state.tab = "soap";
+                renderOutput();
+                toast("Direct SOAP Note entry active.", "info");
+                var f = root.querySelector("#v2rPanel-soap textarea");
+                if (f) f.focus();
+            }
+        },
+        tab: function (b) {
+            if (!state.doc) {
+                if (state.transcript && state.transcript.trim()) {
+                    processConsultation();
+                    return;
+                }
+                state.doc = C.emptyDoc(patient());
+                state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+                state.dirty = false;
+                renderOutput();
+            } else if (b.dataset.tab === "summary") {
+                state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+                var sumEl = $("#v2rSummary");
+                if (sumEl) sumEl.value = state.doc.summary;
+            }
+            showTab(b.dataset.tab);
+        },
         goto: function (b) { gotoField(b.dataset.field); },
         regen: function () { state.dirty = true; processConsultation(); },
-        "regen-summary": function () { state.doc.summary = C.buildSummary(state.doc); $("#v2rSummary").value = state.doc.summary; state.dirty = true; updateStatus(); toast("Summary rebuilt from the current note.", "info"); },
+        "regen-summary": function () {
+            state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+            var sumEl = $("#v2rSummary");
+            if (sumEl) sumEl.value = state.doc.summary;
+            state.dirty = true;
+            updateStatus();
+            toast("Summary accurately rebuilt from the current clinical note.", "info");
+        },
         copy: async function (b) { var ok = await copyText(currentText(b.dataset.what)); toast(ok ? "Copied to clipboard." : "Copy failed. Select the text manually.", ok ? "ok" : "err"); },
         save: function () { save(); },
         print: function (b) { doPrint(b.dataset.what); },
@@ -763,7 +1146,97 @@
             renderStages(); renderTxMeta(); renderOutput(); updateStatus(); showPage("workspace");
             toast("Consultation opened. You can edit and save again.", "info");
         },
-        recheck: recheck
+        recheck: recheck,
+        "docs-for": function (b) {
+            state.histSubView = "documents";
+            var idMap = { "PT-1001": 1, "PT-1002": 2, "PT-1003": 3, "PT-1004": 4 };
+            state.docPatientId = idMap[b.dataset.id] || 1;
+            showPage("history");
+        },
+        "hist-subview": function (b) {
+            state.histSubView = b.dataset.sub;
+            renderHistoryPage();
+        },
+        "doc-tab": function (b) {
+            state.docTab = b.dataset.tab;
+            renderDocumentSearchSection();
+        },
+        "doc-toggle-mode": function () {
+            state.docMode = state.docMode === "exact" ? "flexible" : "exact";
+            if (state.docQuery.trim()) {
+                executeDocSearch(state.docQuery.trim());
+            } else {
+                renderDocumentSearchSection();
+            }
+        },
+        "doc-chip": function (b) {
+            state.docQuery = b.dataset.term;
+            executeDocSearch(state.docQuery);
+        },
+        "doc-search": function () {
+            var inp = $("#v2rDocSearchQ");
+            var q = inp ? inp.value.trim() : state.docQuery.trim();
+            executeDocSearch(q);
+        },
+        "doc-clear-search": function () {
+            state.docQuery = "";
+            state.docSearchResults = null;
+            renderDocumentSearchSection();
+        },
+        "doc-preview": async function (b) {
+            var docId = b.dataset.id;
+            var filename = b.dataset.filename || "Document";
+            await openDocPreview(docId, filename, state.docQuery);
+        },
+        "doc-close-modal": function () {
+            state.docModalData = null;
+            var modal = $("#v2rDocModalWrap");
+            if (modal) modal.remove();
+        },
+        "doc-download": function (b) {
+            var docId = b.dataset.id;
+            var url = "/api/documents/" + docId + "/content?download=true";
+            window.open(url, "_blank");
+        },
+        "doc-reprocess": async function (b) {
+            var docId = b.dataset.id;
+            try {
+                await Api.documents.reprocessDocument(docId);
+                toast("Document reprocessed and re-indexed.", "ok");
+                if (state.docQuery.trim()) executeDocSearch(state.docQuery.trim());
+                else renderDocumentSearchSection();
+            } catch (e) {
+                toast("Failed to reprocess: " + e.message, "err");
+            }
+        },
+        "doc-delete": async function (b) {
+            var docId = b.dataset.id;
+            if (!confirm("Are you sure you want to delete this document from the patient's record?")) return;
+            try {
+                await Api.documents.deleteDocument(docId);
+                toast("Document deleted.", "info");
+                state.docPatients = await Api.documents.listPatients();
+                if (state.docQuery.trim()) executeDocSearch(state.docQuery.trim());
+                else renderDocumentSearchSection();
+            } catch (e) {
+                toast("Failed to delete document: " + e.message, "err");
+            }
+        },
+        "reseed-demo-docs": async function () {
+            try {
+                await Api.documents.seedDemo();
+                toast("Synthetic demo medical reports successfully re-seeded.", "ok");
+                state.docPatients = await Api.documents.listPatients();
+                state.docSearchResults = null;
+                renderHistoryPage();
+            } catch (e) {
+                toast("Failed to reseed: " + e.message, "err");
+            }
+        },
+        "doc-upload-trigger": function () {
+            var inp = $("#v2rDocFileInput");
+            if (inp) inp.click();
+        }
     };
 
     function onClick(e) {
@@ -785,14 +1258,48 @@
         if (bind === "hist-q") { state.histQ = t.value; renderHistoryList(); return; }
         if (bind === "hist-status") { state.histStatus = t.value; renderHistoryList(); return; }
         if (bind === "hist-patient") { state.histPatient = t.value; renderHistoryList(); return; }
-        if (bind === "patient") { state.patientId = t.value; if (state.doc) { state.dirty = true; renderRx(); revalidate(); } updateStatus(); return; }
+        if (bind === "doc-search-q") { state.docQuery = t.value; return; }
+        if (bind === "doc-patient-select") {
+            state.docPatientId = Number(t.value);
+            state.docSearchResults = null;
+            renderDocumentSearchSection();
+            return;
+        }
+        if (bind === "patient") {
+            state.patientId = t.value;
+            if (state.doc) {
+                state.dirty = true;
+                state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+                var sumEl = $("#v2rSummary");
+                if (sumEl) sumEl.value = state.doc.summary;
+                renderRx();
+                revalidate();
+            }
+            updateStatus();
+            if (window.ClinicOSLabReports) window.ClinicOSLabReports.setPatient(t.value);
+            return;
+        }
         if (bind === "force-demo") { state.forceDemo = t.checked; sessionStorage.setItem("v2r_force_demo", t.checked ? "1" : ""); updateMode(); renderSettingsPage(); return; }
         if (!state.doc) return;
         var rx = state.doc.prescription;
-        if (bind === "soap") state.doc.soap[t.dataset.sec][t.dataset.key] = t.value;
+        if (bind === "soap") {
+            if (!state.doc.soap) state.doc.soap = {};
+            if (!state.doc.soap[t.dataset.sec]) state.doc.soap[t.dataset.sec] = {};
+            state.doc.soap[t.dataset.sec][t.dataset.key] = t.value;
+            state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+            var sumEl = $("#v2rSummary");
+            if (sumEl) sumEl.value = state.doc.summary;
+        }
         else if (bind === "summary") state.doc.summary = t.value;
         else if (bind === "rx-date") rx.date = t.value;
-        else if (bind === "rx-follow") { rx.followUp = t.value; state.doc.soap.plan.followUp = t.value; var f = root.querySelector("#f-plan-followUp"); if (f) f.value = t.value; }
+        else if (bind === "rx-follow") {
+            rx.followUp = t.value;
+            if (state.doc.soap && state.doc.soap.plan) state.doc.soap.plan.followUp = t.value;
+            var f = root.querySelector("#f-plan-followUp"); if (f) f.value = t.value;
+            state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+            var sumEl = $("#v2rSummary");
+            if (sumEl) sumEl.value = state.doc.summary;
+        }
         else if (bind === "rx-reviewed") { rx.reviewed = t.checked; refreshApproveUI(); updateStatus(); return; }
         else if (bind === "med-verify") {
             var mv = rx.meds.find(function (m) { return m.id === t.dataset.id; }); mv.verify = t.checked;
@@ -800,6 +1307,9 @@
         } else if (bind === "med") {
             var m = rx.meds.find(function (x) { return x.id === t.dataset.id; });
             m[t.dataset.key] = t.value; m.source = "manual";
+            state.doc.summary = C.buildSummary(state.doc, patient(), doctorName);
+            var sumEl = $("#v2rSummary");
+            if (sumEl) sumEl.value = state.doc.summary;
         }
         if (bind === "soap" && t.dataset.key === "followUp") { rx.followUp = t.value; var rf = root.querySelector("#rxFollow"); if (rf) rf.value = t.value; }
         state.dirty = true; updateStatus(); scheduleValidate();
@@ -808,11 +1318,32 @@
 
     // ------------------------------------------------------------------ init / view switching
     function showView(v) {
-        var dash = document.getElementById("viewDashboard"), pat = document.getElementById("viewPatients");
+        var dash = document.getElementById("viewDashboard"),
+            pat = document.getElementById("viewPatients"),
+            lab = document.getElementById("viewLabReports");
         var isPat = v === "patients";
-        dash.hidden = isPat; pat.hidden = !isPat;
-        document.querySelectorAll("[data-view]").forEach(function (a) { a.classList.toggle("active", a.dataset.view === v); });
-        if (!isPat && recorder) stopRec(true); // never keep the microphone open in a hidden view
+        var isLab = v === "lab-reports";
+        var isDash = !isPat && !isLab;
+
+        if (dash) dash.hidden = !isDash;
+        if (pat) pat.hidden = !isPat;
+        if (lab) lab.hidden = !isLab;
+
+        document.querySelectorAll("[data-view]").forEach(function (a) {
+            a.classList.toggle("active", a.dataset.view === v);
+        });
+
+        if (!isDash && recorder) stopRec(true); // never keep the microphone open in a hidden view
+
+        if (isLab && window.ClinicOSLabReports) {
+            var rootEl = document.getElementById("labReportsRoot");
+            if (rootEl && !rootEl.dataset.initialized) {
+                window.ClinicOSLabReports.init(rootEl);
+            }
+            if (state && state.patientId) {
+                window.ClinicOSLabReports.setPatient(state.patientId);
+            }
+        }
     }
 
     function init() {
@@ -822,6 +1353,12 @@
         root.addEventListener("click", onClick);
         root.addEventListener("input", onInput);
         root.addEventListener("change", onInput);
+        root.addEventListener("change", function (e) {
+            if (e.target && e.target.id === "v2rDocFileInput" && e.target.files && e.target.files[0]) {
+                handleDocUpload(e.target.files[0]);
+                e.target.value = "";
+            }
+        });
         $("#v2rFile").addEventListener("change", function (e) { handleUpload(e.target.files[0]); e.target.value = ""; });
         window.addEventListener("pagehide", function () { if (recorder) recorder.release(); });
         window.addEventListener("beforeunload", function (e) { if (state.dirty) { e.preventDefault(); e.returnValue = ""; } });
@@ -829,10 +1366,22 @@
         renderPatientSelect(); renderStages(); renderRecUI(); renderTxMeta(); renderIssues(); renderOutput(); updateMode(); showPage("workspace");
 
         document.querySelectorAll("[data-view]").forEach(function (a) {
-            a.addEventListener("click", function (e) { e.preventDefault(); location.hash = a.dataset.view === "patients" ? "patients" : ""; showView(a.dataset.view); });
+            a.addEventListener("click", function (e) {
+                e.preventDefault();
+                var target = a.dataset.view;
+                location.hash = target === "dashboard" ? "" : target;
+                showView(target);
+            });
         });
-        window.addEventListener("hashchange", function () { showView(location.hash === "#patients" ? "patients" : "dashboard"); });
-        showView(location.hash === "#patients" ? "patients" : "dashboard");
+
+        function handleHash() {
+            var h = (location.hash || "").replace(/^#/, "");
+            if (h === "patients") showView("patients");
+            else if (h === "lab-reports") showView("lab-reports");
+            else showView("dashboard");
+        }
+        window.addEventListener("hashchange", handleHash);
+        handleHash();
 
         Api.status().then(function (s) { state.backend = s; updateMode(); renderRecUI(); });
     }

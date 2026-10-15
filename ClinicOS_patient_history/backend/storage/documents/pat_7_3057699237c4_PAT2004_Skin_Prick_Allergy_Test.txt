@@ -1,0 +1,27 @@
+METROPOLITAN ALLERGY & IMMUNOLOGY AMBULATORY CLINIC
+
+EPICUTANEOUS SKIN-PRICK ALLERGY DIAGNOSTIC TEST REPORT
+
+Patient: Sophia Lin | MRN: PAT-2004-5501 | DOB: 1997-11-05 | Age: 29 | Sex: Female
+
+Exam Date: 2026-05-14 | Ordering Physician: Dr. Elena Rostova, MD
+
+TEST PROTOCOL: Epicutaneous skin-prick testing performed with histamine control (10 mg/mL) and saline negative control.
+
+CLINICAL HISTORY & ALLERGIES: Patient referred for evaluation of acute contact urticaria and suspected food allergies.
+
+SKIN TESTING OBSERVATIONS & WHEAL DIAMETER (mm):
+
+1. Histamine Dihydrochloride (Positive Control): 7.0 mm wheal / 24 mm flare [VALID TEST]
+
+2. Normal Saline (Negative Control): 0.0 mm wheal / 0.0 mm flare [NEGATIVE]
+
+3. Cat Dander (Felis catus): 6.5 mm wheal / 20 mm flare [POSITIVE ALLERGY]
+
+4. Birch Tree Pollen: 5.0 mm wheal / 16 mm flare [POSITIVE ALLERGY]
+
+5. Peanut Protein Extract: 0.0 mm wheal / 0.0 mm flare [NEGATIVE]
+
+6. Strawberry Extract: 0.0 mm wheal / 0.0 mm flare [NEGATIVE]
+
+DIAGNOSTIC IMPRESSION: Confirmed IgE-mediated environmental allergy to feline dander and tree pollens. Allergy immunotherapy discussed.

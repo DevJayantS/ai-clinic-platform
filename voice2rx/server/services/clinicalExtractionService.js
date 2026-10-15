@@ -6,14 +6,29 @@ const config = require("../config");
 const C = require("../../shared/clinical");
 
 const SYSTEM_PROMPT = [
-    "You extract structured information from a doctor-patient consultation transcript.",
-    "STRICT RULES:",
-    "- Use ONLY information explicitly present in the transcript. Never infer or invent.",
-    "- If something is not stated, use an empty string (or empty array).",
-    "- Never choose a diagnosis, drug, strength, dose, frequency or duration that was not spoken.",
-    "- For each medicine copy the exact sentence into sourceText. Leave unstated medicine fields empty.",
-    "- 'assessment' and 'plan' are what the DOCTOR stated; leave empty if absent or 'awaiting'.",
-    "- Reply with a single JSON object only, matching exactly the keys below.",
+    "You are an expert AI clinical documentation specialist extracting structured data from doctor-patient transcripts.",
+    "STRICT CLINICAL EXTRACTION RULES:",
+    "- Use ONLY facts stated in the transcript. Never infer, diagnose, or hallucinate unstated medical facts.",
+    "- If a clinical field is not stated in the transcript, set it to an empty string \"\" (or empty array []).",
+    "- CRITICAL ON INTERVIEW QUESTIONS: NEVER extract questions asked by the clinician or patient as complaints, symptoms, or history.",
+    "  Example: If doctor asks 'Have you been experiencing racing of the heart?' or 'Do you have prior medical conditions?', this is ONLY A QUESTION.",
+    "  It is NOT a patient complaint or history. Leave 'chiefComplaint', 'presentIllness', and 'history' as \"\" unless the patient affirmatively confirms symptoms.",
+    "  Never put question sentences or sentences ending in '?' into clinical fields.",
+    "- 'chiefComplaint': Confirmed primary symptom or reason for visit (never a question).",
+    "- 'presentIllness': Narrative of presenting illness and confirmed symptoms (never questions).",
+    "- 'symptomDuration': Stated duration of symptoms (e.g. '3 days', '2 weeks').",
+    "- 'history': Relevant past medical, surgical, or chronic conditions confirmed as facts.",
+    "- 'currentMedications': Array of regular/pre-existing medications the patient is already taking.",
+    "- 'allergies': Array of stated drug or environmental allergies (e.g. ['Penicillin']).",
+    "- 'examination': Physical examination observations spoken by the doctor.",
+    "- 'vitals': Stated vital signs only (temperature, bloodPressure, pulse, spo2).",
+    "- 'testResults': Stated diagnostic or lab results.",
+    "- 'assessment': Clinician-stated diagnosis or clinical impression.",
+    "- 'investigations': Labs, imaging, or diagnostic tests ordered by the clinician.",
+    "- 'plan': Non-drug management, advice, precautions, and instructions.",
+    "- 'followUp': Follow-up timeline, next visit, or SOS warning signs.",
+    "- 'medications': Array of prescribed medicines with: name, strength, dose, route, frequency, timing, duration, instructions, and exact sourceText sentence from transcript.",
+    "- Reply strictly with a single JSON object matching the exact keys below.",
     "{",
     '  "patientId": "", "chiefComplaint": "", "presentIllness": "", "symptomDuration": "",',
     '  "history": "", "currentMedications": [""], "allergies": [""], "examination": "",',
@@ -38,7 +53,7 @@ async function ollamaFetch(path, body, timeoutMs) {
 async function status() {
     if (config.llm.provider !== "ollama") return { available: false, provider: "basic", model: "", reason: "LLM_PROVIDER=basic" };
     try {
-        const tags = await ollamaFetch("/api/tags", null, 2000);
+        const tags = await ollamaFetch("/api/tags", null, 6000);
         const names = (tags.models || []).map((m) => m.name);
         const wanted = config.llm.model;
         const present = names.some((n) => n === wanted || n === wanted + ":latest");
@@ -59,10 +74,22 @@ function coerce(parsed) {
         let v = parsed[k];
         if (v == null) v = [];
         if (!Array.isArray(v)) v = [v];
-        parsed[k] = v.map(flat).filter((s) => s && !/^(none|n\/a|not (stated|provided|mentioned))\.?$/i.test(s));
+        parsed[k] = v.map(flat).filter((s) => s && !C.isQuestion(s) && !/^(none|n\/a|not (stated|provided|mentioned))\.?$/i.test(s));
+    });
+    ["patientId", "chiefComplaint", "presentIllness", "symptomDuration", "history", "examination", "testResults", "assessment", "investigations", "plan", "followUp"].forEach((k) => {
+        if (parsed[k] != null && typeof parsed[k] !== "string") {
+            parsed[k] = flat(parsed[k]);
+        }
+        if (parsed[k]) {
+            if (C.isQuestion(parsed[k])) {
+                parsed[k] = "";
+            } else {
+                parsed[k] = parsed[k].split(/(?<=[.!?])\s+/).filter((s) => !C.isQuestion(s)).join(" ").trim();
+            }
+        }
     });
     Object.keys(parsed).forEach((k) => { if (parsed[k] === null) parsed[k] = ""; });
-    if (Array.isArray(parsed.medications)) parsed.medications = parsed.medications.filter((m) => m && typeof m === "object" && flat(m.name));
+    if (Array.isArray(parsed.medications)) parsed.medications = parsed.medications.filter((m) => m && typeof m === "object" && flat(m.name) && !C.isQuestion(flat(m.name)));
     if (parsed.vitals && typeof parsed.vitals === "object") Object.keys(parsed.vitals).forEach((k) => { if (parsed.vitals[k] == null) parsed.vitals[k] = ""; });
     return parsed;
 }
@@ -89,18 +116,43 @@ async function extractWithOllama(transcript) {
 // "current medications"). The rule-based extractor only copies verbatim transcript text, so:
 //  - empty LLM fields are filled from it,
 //  - prescribed medicines it found are added if the LLM missed them,
+//  - details on existing medicines (strength, frequency, duration) are merged if missing in LLM,
 //  - current-medication entries that are really the prescribed drugs are removed,
 //  - the LLM's free-form missingInfo is replaced by the rule-based list.
 function merge(llm, rules) {
     ["patientId", "chiefComplaint", "presentIllness", "symptomDuration", "history", "examination", "testResults", "assessment", "investigations", "plan", "followUp"]
-        .forEach((k) => { if (!llm[k] && rules[k]) llm[k] = rules[k]; });
+        .forEach((k) => {
+            if (!llm[k] && rules[k] && !C.isQuestion(rules[k])) llm[k] = rules[k];
+            if (llm[k] && C.isQuestion(llm[k])) llm[k] = "";
+        });
     Object.keys(llm.vitals).forEach((k) => { if (!llm.vitals[k] && rules.vitals[k]) llm.vitals[k] = rules.vitals[k]; });
-    const names = new Set(llm.medications.map((m) => m.name.toLowerCase()));
-    rules.medications.forEach((m) => { if (!names.has(m.name.toLowerCase())) { llm.medications.push(m); names.add(m.name.toLowerCase()); } });
-    if (!rules.currentMedications.length) {
-        llm.currentMedications = llm.currentMedications.filter((s) => ![...names].some((n) => s.toLowerCase().includes(n)));
+
+    // Back-fill chiefComplaint from presentIllness or vice-versa ONLY if not a question
+    if (!llm.chiefComplaint && llm.presentIllness && !C.isQuestion(llm.presentIllness)) {
+        const firstClause = llm.presentIllness.split(/[.;]/)[0].trim();
+        if (!C.isQuestion(firstClause)) llm.chiefComplaint = firstClause;
     }
-    if (!llm.allergies.length) llm.allergies = rules.allergies;
+    if (!llm.presentIllness && llm.chiefComplaint && !C.isQuestion(llm.chiefComplaint)) {
+        llm.presentIllness = llm.chiefComplaint;
+    }
+
+    // Merge medications
+    const validRuleMeds = rules.medications.filter((m) => m && !C.isQuestion(m.name));
+    const names = new Set(llm.medications.map((m) => m.name.toLowerCase()));
+    llm.medications.forEach((lm) => {
+        const rm = validRuleMeds.find((m) => m.name.toLowerCase() === lm.name.toLowerCase());
+        if (rm) {
+            ["strength", "dose", "route", "frequency", "timing", "duration", "instructions"].forEach((k) => {
+                if (!lm[k] && rm[k]) lm[k] = rm[k];
+            });
+            if (!lm.sourceText && rm.sourceText) lm.sourceText = rm.sourceText;
+        }
+    });
+    validRuleMeds.forEach((m) => { if (!names.has(m.name.toLowerCase())) { llm.medications.push(m); names.add(m.name.toLowerCase()); } });
+    if (!rules.currentMedications.length) {
+        llm.currentMedications = llm.currentMedications.filter((s) => !C.isQuestion(s) && ![...names].some((n) => s.toLowerCase().includes(n)));
+    }
+    if (!llm.allergies.length) llm.allergies = rules.allergies.filter((a) => !C.isQuestion(a));
     llm.missingInfo = rules.missingInfo;
     return llm;
 }

@@ -1,0 +1,17 @@
+METROPOLITAN EMERGENCY MEDICINE CLINICAL ENCOUNTER
+
+EMERGENCY DEPARTMENT DISCHARGE SUMMARY — PAT-2002
+
+Patient: Eleanor Vance | DOB: 1985-08-23 | Age: 41 | Sex: Female
+
+ED Encounter Date: 2026-07-28 | Discharge Time: 21:45 EST
+
+CHIEF COMPLAINT: Epigastric discomfort and acute mild allergic rash following restaurant dinner.
+
+CLINICAL HISTORY & ALLERGIES: Patient evaluated for acute hives. Allergy testing was performed previously.
+
+HOSPITAL ENCOUNTER SUMMARY: Patient treated with oral diphenhydramine 25mg and famotidine 20mg. Symptoms resolved fully within 2 hours.
+
+DISCHARGE STATUS: The patient was discharged in stable condition. Tolerating clear liquids without distress.
+
+DISCHARGE INSTRUCTIONS: Follow up with allergy specialist. Avoid known food triggers.

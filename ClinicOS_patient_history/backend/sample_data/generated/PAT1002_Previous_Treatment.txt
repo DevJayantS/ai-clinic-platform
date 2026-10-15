@@ -1,0 +1,9 @@
+OUTPATIENT TREATMENT NOTES - CARDIOVASCULAR CLINIC
+
+Patient Identifier: PAT-1002
+
+Routine monitoring for chronic hypertension and type 2 diabetes.
+
+Patient reports daily blood pressure readings between 125/80 and 135/85 mmHg.
+
+Adjusted anti-hypertensive medication dosage to maintain stable vascular parameters.

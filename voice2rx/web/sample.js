@@ -15,6 +15,7 @@ window.V2RSample = {
 /* Synthetic patient list for the demo (matches the names on the doctor dashboard). */
 window.V2RPatients = [
     { id: "Demo Patient 001", name: "Demo Patient 001", age: "", note: "Synthetic demo patient" },
+    { id: "PAT-2001", name: "Arthur Pendelton", age: "54" },
     { id: "PT-1001", name: "Rahul Sharma", age: "32" },
     { id: "PT-1002", name: "Priya Kumar", age: "28" },
     { id: "PT-1003", name: "Amit Singh", age: "45" },

@@ -76,6 +76,60 @@
                 sessionStorage.setItem(SESSION_KEY, JSON.stringify(list));
                 return out;
             }
+        },
+
+        /** ClinicOS Patient Document Search & Medical History Service */
+        documents: {
+            listPatients: function () { return call("/api/patients", {}); },
+            getPatient: function (id) { return call("/api/patients/" + id, {}); },
+            createPatient: function (payload) {
+                return call("/api/patients", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            },
+            deletePatient: function (id) {
+                return call("/api/patients/" + id, { method: "DELETE" });
+            },
+            listPatientDocuments: function (patientId) {
+                return call("/api/patients/" + patientId + "/documents", {});
+            },
+            searchPatientDocuments: function (patientId, query, mode, page, pageSize) {
+                var p = new URLSearchParams({
+                    q: query || "",
+                    mode: mode || "exact",
+                    page: String(page || 1),
+                    page_size: String(pageSize || 50)
+                });
+                return call("/api/patients/" + patientId + "/search?" + p.toString(), {});
+            },
+            getDocument: function (docId) {
+                return call("/api/documents/" + docId, {});
+            },
+            getDocumentSegments: function (docId) {
+                return call("/api/documents/" + docId + "/segments", {});
+            },
+            deleteDocument: function (docId) {
+                return call("/api/documents/" + docId, { method: "DELETE" });
+            },
+            reprocessDocument: function (docId) {
+                return call("/api/documents/" + docId + "/reprocess", { method: "POST" });
+            },
+            uploadDocument: function (patientId, file) {
+                var formData = new FormData();
+                formData.append("files", file);
+                return fetch(base + "/api/patients/" + patientId + "/documents", {
+                    method: "POST",
+                    body: formData
+                }).then(function (r) { return r.json(); });
+            },
+            systemStatus: function () {
+                return call("/api/system/status", {});
+            },
+            seedDemo: function () {
+                return call("/api/system/seed-demo", { method: "POST" });
+            }
         }
     };
 
